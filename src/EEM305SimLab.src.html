@@ -1,0 +1,1923 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- SECURITY: Content Security Policy. The page cannot load or send anything over the network (connect-src 'none'), cannot load external scripts, styles, fonts or images, and cannot submit forms. All code is inline in this file. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; font-src data:; img-src data: blob:; connect-src 'none'; media-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; manifest-src 'none'; form-action 'none'; base-uri 'none'">
+<meta name="referrer" content="no-referrer">
+<title>EEM305SimLab</title>
+<style>
+  /* ---------- Tema renkleri ---------- */
+  :root{
+    --bg:#f4f6fa;--card:#ffffff;--soft:#f3f5f9;--text:#0f172a;--muted:#64748b;--border:#e3e8ef;
+    --accent:#2563eb;--accentBg:#e0eaff;--onAccent:#ffffff;
+    --pc:#7c3aed;--pcBg:#efe9ff;
+    --chg:#c2410c;--chgBg:#ffedd5;--ok:#15803d;--okBg:#dcfce7;--dim:#a0aec0;
+    --nav:#0f172a;--navText:#f1f5f9;--navMuted:#94a3b8;
+  }
+  [data-theme="dark"]{
+    --bg:#0b1120;--card:#111827;--soft:#172033;--text:#e5e7eb;--muted:#94a3b8;--border:#233046;
+    --accent:#60a5fa;--accentBg:#1b3358;--onAccent:#0b1120;
+    --pc:#c4b5fd;--pcBg:#2b1d55;
+    --chg:#fdba74;--chgBg:#43200a;--ok:#4ade80;--okBg:#06301a;--dim:#4b5563;
+    --nav:#060a14;--navText:#e5e7eb;--navMuted:#94a3b8;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  :root{--uiFont:"Inter Var",Inter,"Segoe UI",system-ui,-apple-system,Roboto,sans-serif;--monoFont:"JetBrains Mono Var","JetBrains Mono",Consolas,ui-monospace,monospace}
+  body{font-family:var(--uiFont);font-feature-settings:"cv11","ss01";background:var(--bg);color:var(--text);font-size:15px;line-height:1.5}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .mono{font-family:var(--monoFont)}
+  button{font:inherit}
+
+  /* ---------- Üst menü ---------- */
+  nav{position:sticky;top:0;z-index:20;height:52px;background:var(--nav);color:var(--navText);display:flex;align-items:center;gap:28px;padding:0 28px}
+  .brand{font-weight:700;display:flex;align-items:center;gap:10px;cursor:pointer;font-size:15px}
+  .chip{background:var(--accent);color:#fff;font-size:12px;font-weight:700;border-radius:6px;padding:3px 8px;letter-spacing:.3px}
+  nav .links{display:flex;gap:4px}
+  nav .links a{color:var(--navMuted);padding:7px 14px;border-radius:8px;font-size:14px;text-decoration:none}
+  nav .links a.active,nav .links a:hover{color:var(--navText);background:rgba(255,255,255,.09)}
+  body.simMode nav,body.simMode footer{display:none}
+
+  .wrap{max-width:1280px;margin:0 auto;padding:32px 28px}
+  h1{font-size:28px;margin:0 0 8px;letter-spacing:-.3px;font-weight:700}
+  h2{font-size:18px;margin:0 0 14px;font-weight:650}
+  .lead{color:var(--muted);max-width:none;font-size:16px;margin:0}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px 28px}
+  .btn{font-size:14px;border:1px solid var(--border);background:var(--card);color:var(--text);border-radius:8px;padding:6px 14px;cursor:pointer;white-space:nowrap}
+  .btn:hover{background:var(--soft)}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--onAccent)}
+  .btn:disabled{opacity:.4;cursor:default}
+  .tags{display:flex;gap:6px;flex-wrap:wrap}
+  .tag{font-size:12px;border-radius:6px;padding:2px 9px;background:var(--soft);color:var(--muted);border:1px solid var(--border)}
+  footer{color:var(--muted);font-size:13px;text-align:center;padding:8px 24px 28px}
+
+  /* ---------- Ana sayfa ---------- */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-top:16px}
+  .simCard{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:10px;transition:border-color .15s,transform .15s}
+  .simCard.ready{cursor:pointer}
+  .simCard.ready:hover{border-color:var(--accent);transform:translateY(-2px)}
+  .simCard.soon{opacity:.55}
+  .simCard .title{font-weight:650;font-size:16px}
+  .simCard .desc{color:var(--muted);font-size:14px;flex:1}
+  .status{font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px;align-self:flex-start}
+  .status.ready{background:var(--okBg);color:var(--ok)}
+  .status.soon{background:var(--soft);color:var(--muted)}
+  .secTitle{font-size:14px;font-weight:650;color:var(--muted);margin:32px 0 0}
+
+  /* ---------- Ayarlar ---------- */
+  .setRow{display:grid;grid-template-columns:220px 1fr;gap:20px;align-items:center;padding:16px 0;border-bottom:1px solid var(--border)}
+
+  .setRow .setLbl{font-weight:600}
+  .setRow .hint{font-size:13px;color:var(--muted);font-weight:400}
+  .seg{display:inline-flex;border:1px solid var(--border);border-radius:8px;overflow:hidden}
+  .seg button{background:var(--card);color:var(--muted);border:0;border-right:1px solid var(--border);padding:7px 16px;cursor:pointer;font-size:14px}
+  .seg button:last-child{border-right:0}
+  .seg button.on{background:var(--accent);color:var(--onAccent)}
+  .saveBar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:20px;padding-top:20px;border-top:1px solid var(--border)}
+  .saveMsg{font-size:13px;color:var(--ok)}
+  .infoBox{background:var(--soft);border-radius:10px;padding:12px 14px;font-size:13px;color:var(--muted);margin-top:16px}
+
+  /* ---------- Simülasyon ekranı: tek ekran, kaydırmasız ---------- */
+  .simPage{height:100vh;display:flex;flex-direction:column;gap:10px;padding:12px 16px}
+  .simHead{display:flex;flex-direction:column;gap:8px;flex:none}
+  .toolbar{display:flex;gap:8px;align-items:center}
+  .toolbar .title{font-weight:650;font-size:16px;margin:0 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .toolbar .spacer{flex:1}
+  .counter{color:var(--muted);font-size:13px;min-width:92px;text-align:right}
+  .iconBtn{border:1px solid var(--border);background:var(--card);color:var(--muted);border-radius:8px;width:34px;height:32px;cursor:pointer;font-size:16px}
+  .iconBtn:hover{color:var(--text);background:var(--soft)}
+  .progress{height:3px;background:var(--border);border-radius:3px;overflow:hidden}
+  .progress div{height:100%;background:var(--accent);transition:width .2s}
+  .headRow{display:flex;gap:14px;align-items:center}
+  .headRow .stepInfo{flex:1 1 0;min-width:0}
+  .headRow .stepInfo > div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .headRow .pills{flex-wrap:nowrap;overflow:hidden}
+  .headRow .ctrl{flex:none}
+  .headRow .regs{flex:1 1 0;min-width:0;justify-content:flex-end}
+  .headRow .reg{flex:0 1 112px;min-width:66px;overflow:hidden}
+  .headRow .reg .name{overflow:hidden;text-overflow:ellipsis}
+  @media (max-width:1500px){.btn.big{min-width:0;padding:7px 14px}.reg .val{font-size:14px}.reg{padding:3px 7px}.reg .old{display:none}}
+  .ctrl{display:flex;flex-direction:column;align-items:center;gap:3px}
+  .ctrlBtns{display:flex;gap:8px}
+  .btn.big{font-size:15px;padding:8px 22px;border-radius:10px;font-weight:600;min-width:104px}
+  .ctrl .counter{min-width:0;text-align:center;font-size:12px}
+  .keys{font-size:12px;color:var(--muted);margin-right:6px}
+  .resH{font-size:13px;font-weight:650;color:var(--muted);margin:14px 0 6px}
+  .resP{margin:0;font-size:14.5px}
+  .resL{margin:0;padding-left:20px;font-size:14.5px}
+  .resL li{margin-bottom:4px}
+  .byte .mean{font-size:12px;margin-top:3px;line-height:1.35}
+  .noteExtra{margin-top:8px;font-size:12px;color:var(--muted);font-family:var(--monoFont)}
+  .stepInfo{min-width:0}
+  .stepTitle{font-size:16px;font-weight:650}
+  .stepSub{color:var(--muted);font-size:13px;margin-left:10px}
+  .pills{display:flex;gap:8px;margin-top:4px;flex-wrap:wrap}
+  .pill{border-radius:6px;padding:2px 9px;font-size:12px;white-space:nowrap}
+  .pill.exec{background:var(--accentBg);color:var(--accent)}
+  .pill.pcp{background:var(--pcBg);color:var(--pc)}
+  .regs{display:flex;gap:6px;flex:none}
+  .reg{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:3px 10px;min-width:92px}
+  .reg.changed{border-color:var(--chg)}
+  .reg .name{font-size:10.5px;color:var(--muted);white-space:nowrap}
+  .reg .val{font-size:16px;font-weight:600;white-space:nowrap}
+  .old{color:var(--dim);font-size:.72em;text-decoration:line-through;margin-right:5px;font-weight:400}
+  .chg{background:var(--chgBg);color:var(--chg);border-radius:4px;padding:0 4px}
+
+  .cols{flex:1;min-height:0;display:grid;gap:10px;grid-template-columns:minmax(0,1fr) minmax(0,.8fr) minmax(0,1.25fr);grid-template-rows:minmax(0,1fr) var(--explH)}
+  .panel{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;min-height:0;overflow:hidden}
+  .panel.full{grid-column:1/-1}
+  :root{--explH:clamp(150px,21vh,200px)}
+  .panel.full{height:var(--explH)}
+  .panel.full .explGrid{height:100%;align-items:stretch}
+  .panel.full .explGrid > div{min-height:0;overflow:hidden;display:flex;flex-direction:column}
+  #opv,#ops,#note{min-height:0;overflow:auto}
+  .tlBox{flex:1;min-height:0;height:auto !important}
+  .pTitle{font-size:13px;font-weight:650;margin:0 0 6px;display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+  .pTitle small{font-weight:400;color:var(--muted);font-size:11.5px}
+  .tblWrap{flex:1;min-height:0;overflow:hidden}
+  table{width:100%;height:100%;border-collapse:collapse;font-size:clamp(10.5px,1.45vh,13px)}
+  td,th{padding:1px 8px;line-height:1.25;border-bottom:1px solid var(--border);text-align:left;vertical-align:middle;white-space:nowrap}
+  th{font-size:10.5px;color:var(--muted);font-weight:600}
+  tr.exec td{background:var(--accentBg)}
+  tr.gap td{color:var(--muted);font-size:10.5px;font-style:italic;max-width:0;overflow:hidden;text-overflow:ellipsis}
+  td.badges{width:84px}
+  .b{font-size:9.5px;line-height:13px;font-weight:700;border-radius:4px;padding:0 5px;margin-right:3px;display:inline-block}
+  .b.exec{background:var(--accent);color:var(--onAccent)}
+  .b.pc{background:var(--pcBg);color:var(--pc);border:1px solid var(--pc)}
+  .b.sp{background:var(--accent);color:var(--onAccent)}
+  .b.stack{background:var(--okBg);color:var(--ok)}
+  .b.stale{color:var(--dim);border:1px dashed var(--dim)}
+  .lbl{color:var(--accent)}
+  td.dimv{color:var(--dim)}
+  td.reg2{font-size:10.5px;color:var(--muted)}
+  @media (max-width:1450px){.colRegion{display:none}}
+  .legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:6px;font-size:11px;color:var(--muted);flex:none}
+
+  .flowBox{flex:1;min-height:0;display:flex}
+  .flowSvg{width:100%;height:100%}
+  .flowSvg text{font-family:var(--monoFont)}
+  .flowSvg .fl{font-size:12px;font-weight:700;fill:var(--chg);paint-order:stroke;stroke:var(--card);stroke-width:4px}
+  .flowSvg .anim{stroke-dasharray:6 4;animation:dash .7s linear infinite}
+  body.noAnim .flowSvg .anim{animation:none;stroke-dasharray:none}
+  @keyframes dash{to{stroke-dashoffset:-10}}
+  .sw{display:inline-block;width:16px;height:3px;vertical-align:middle;margin-right:5px;border-radius:2px}
+
+  .explGrid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,.95fr) minmax(0,1fr) minmax(0,1.05fr);gap:18px;align-items:start}
+  .sub{font-size:11.5px;color:var(--muted);font-weight:600;margin-bottom:5px}
+  .bytes{display:flex;gap:8px;margin-bottom:6px}
+  .byte{border:1px solid var(--border);border-radius:8px;padding:5px 9px;background:var(--soft);flex:1;min-width:0}
+  .byte .addr{font-size:10.5px;color:var(--muted)}
+  .byte .hex{font-size:17px;font-weight:700;line-height:1.3}
+  .byte .bin{font-size:11px;color:var(--muted)}
+  .byte .mean{font-size:11.5px;margin-top:2px}
+  .formula{background:var(--soft);border-radius:8px;padding:6px 10px;font-size:12px}
+  ol.ops{margin:0;padding-left:20px;font-size:13.5px}
+  ol.ops li{margin-bottom:2px}
+  .note{background:var(--soft);border-left:3px solid var(--accent);padding:8px 12px;font-size:13px}
+
+  /* Alçak ekranlar (ör. 1366x768 dizüstü): açıklama satırları gizlenir, boşluklar daralır */
+  @media (max-height:780px){
+    .simPage{gap:7px;padding:8px 12px}.simHead{gap:5px}.legend{display:none}
+    .btn{padding:4px 11px;font-size:13px}.iconBtn{height:28px}
+    .reg .val{font-size:14px}.pills{margin-top:2px}
+    .byte{padding:3px 8px}.byte .hex{font-size:15px}.btn.big{padding:6px 18px;font-size:14px}
+    ol.ops{font-size:12.5px}.note{font-size:12px;padding:6px 10px}.formula{font-size:11.5px;padding:4px 8px}
+  }
+  @media (max-width:1100px),(max-height:560px){
+    .simPage{height:auto}.cols{grid-template-columns:1fr;grid-template-rows:none}
+    .headRow{flex-wrap:wrap}.headRow .regs{flex-basis:100%;justify-content:flex-start}.regs{flex-wrap:wrap}.keys{display:none}
+    table{height:auto}td,th{height:22px}.flowBox{height:440px;flex:none}.explGrid{grid-template-columns:1fr}
+    .panel.full{height:auto}.panel.full .explGrid > div{overflow:visible}.tlBox{height:160px !important;flex:none}
+    .toolbar{flex-wrap:wrap}.tblWrap{overflow-x:auto}.legend{display:flex}
+  }
+
+  /* ---------- Code Lab: editör ---------- */
+  .labPage{height:calc(100vh - 52px);display:flex;flex-direction:column;gap:12px;padding:16px 20px;max-width:1800px;margin:0 auto}
+  .labHead{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .labHead h2{margin:0 12px 0 0;display:flex;align-items:center}
+  .ic{width:1.1em;height:1.1em;vertical-align:-0.17em;margin-right:.42em;flex:none}
+  .ic.r{margin-right:0;margin-left:.42em}
+  .btn{display:inline-flex;align-items:center;justify-content:center}
+  .iconBtn{display:inline-flex;align-items:center;justify-content:center}.iconBtn .ic{margin:0;width:17px;height:17px}
+  h2 .ic,h3 .ic{color:var(--accent)}
+  .cardTop{display:flex;justify-content:space-between;align-items:center}
+  .cardIcon{width:38px;height:38px;border-radius:10px;background:var(--accentBg);color:var(--accent);display:flex;align-items:center;justify-content:center}
+  .cardIcon .ic{margin:0;width:20px;height:20px}
+  .simCard.soon .cardIcon{background:var(--soft);color:var(--muted)}
+  .hintKey{font-size:11.5px;color:var(--muted);border:1px solid var(--border);border-radius:6px;padding:2px 7px;font-family:var(--monoFont)}
+  .editor .cm-editor{flex:1;min-width:0}
+  .tlBox{position:relative;height:118px}
+  .subHint{font-weight:400;color:var(--dim)}
+  .sub .ic{color:var(--accent)}
+  .isaWrap{max-width:1180px}
+  .isaWrap h1 .ic{color:var(--accent)}
+  .isaLegend{margin-top:14px;font-size:13px;color:var(--muted);line-height:1.7}
+  .isaLegend b{color:var(--text);font-family:var(--monoFont);font-weight:600}
+  .isaBar{position:sticky;top:52px;z-index:5;background:var(--bg);display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:14px 0}
+  .isaSearch{display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:0 10px;flex:1;min-width:240px}
+  .isaSearch .ic{color:var(--muted);margin:0}
+  .isaSearch input{border:0;outline:0;background:transparent;color:var(--text);font:inherit;font-size:14px;padding:8px 2px;width:100%}
+  .isaCount{font-size:13px;color:var(--muted);font-family:var(--monoFont)}
+  .isaGroup{margin-bottom:14px;padding:18px 22px}
+  .isaTbl{width:100%;border-collapse:collapse;font-size:13.5px}
+  .isaTbl th{text-align:left;font-size:11px;color:var(--muted);font-weight:600;padding:6px 8px;border-bottom:1px solid var(--border)}
+  .isaTbl td{padding:5px 8px;border-bottom:1px solid var(--border);vertical-align:middle}
+  .isaTbl tr:not(.famRow):hover td{background:var(--soft)}
+  .isaTbl td.num{text-align:center}
+  .isaSyn{font-weight:600;white-space:nowrap}
+  .isaOp{color:var(--muted)}
+  .isaFlags{font-size:12px;color:var(--chg);white-space:nowrap}
+  .famRow td{background:var(--soft);font-size:13px;color:var(--muted);padding:7px 8px}
+  .famName{display:inline-block;min-width:64px;font-weight:700;color:var(--accent);margin-right:10px}
+  .libTbl{width:100%;border-collapse:collapse;font-size:13.5px}
+  .libTbl td{padding:6px 8px;border-bottom:1px solid var(--border);vertical-align:top;white-space:normal}
+  .libTbl td:first-child{font-weight:600;white-space:nowrap}
+  .libTbl td:nth-child(2),.libTbl td:nth-child(3){white-space:nowrap;color:var(--muted)}
+  body.gsapOn .flowSvg .anim{animation:none;opacity:.55}
+  body.gsapOn .flowSvg .fl{display:none}
+  .byte .bin{display:block;font-size:10.5px}
+  .flowSvg .pkt{pointer-events:none}
+  .labHead select{font:inherit;font-size:14px;border:1px solid var(--border);background:var(--card);color:var(--text);border-radius:8px;padding:6px 10px}
+  .labBody{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:12px}
+  .editor{display:flex;background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;min-height:0}
+  .gutter{margin:0;padding:12px 8px 12px 12px;text-align:right;color:var(--dim);background:var(--soft);border-right:1px solid var(--border);user-select:none;overflow:hidden;font-size:13px;line-height:20px;min-width:48px}
+  .gutter .errLn{color:#fff;background:#dc2626;border-radius:3px;padding:0 3px}
+  .editor textarea{flex:1;border:0;outline:0;resize:none;padding:12px 14px;font-size:13px;line-height:20px;background:var(--card);color:var(--text);white-space:pre;overflow:auto;tab-size:8}
+  .side{display:flex;flex-direction:column;gap:12px;min-height:0;overflow:auto}
+  .side .card{padding:14px 16px}
+  .side h3{font-size:14px;margin:0 0 8px}
+  .errItem{font-size:13px;color:#dc2626;padding:4px 0;cursor:pointer;border-bottom:1px solid var(--border)}
+  .okMsg{font-size:13px;color:var(--ok)}
+  .ref{font-size:12.5px;color:var(--muted);line-height:1.6}
+  .ref code{font-family:var(--monoFont);font-size:12px;color:var(--text);background:var(--soft);border-radius:4px;padding:0 4px}
+  .mnList{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+  .mnList span{font-family:var(--monoFont);font-size:11px;background:var(--soft);border:1px solid var(--border);border-radius:4px;padding:0 5px;color:var(--text)}
+  @media (max-width:1000px){.labPage{height:auto}.labBody{grid-template-columns:1fr}.editor{height:520px}}
+
+  /* ---------- RAM ızgara görünümü (Code Lab) ---------- */
+  table.ramGrid{table-layout:fixed;text-align:center}
+  table.ramGrid th,table.ramGrid td{text-align:center;padding:0;border:1px solid var(--border);font-size:clamp(10px,1.35vh,12px)}
+  table.ramGrid th{background:var(--soft)}
+  table.ramGrid td.u{color:var(--dim)}
+  table.ramGrid td.bk{background:var(--soft)}
+  table.ramGrid td.st{background:var(--okBg);color:var(--ok);font-weight:600}
+  table.ramGrid td.cg{background:var(--chgBg);color:var(--chg);font-weight:700}
+  table.ramGrid td.sp{outline:2px solid var(--accent);outline-offset:-2px;font-weight:700}
+  .tblWrap.scroll{overflow:auto}
+  .tblWrap.scroll table{height:auto}
+  .tblWrap.scroll td{height:22px}
+  .stopBadge{background:#fee2e2;color:#b91c1c;border-radius:6px;padding:2px 9px;font-size:12px;margin-left:8px}
+  [data-theme="dark"] .stopBadge{background:#450a0a;color:#fca5a5}
+</style>
+</head>
+<body>
+<nav id="topNav">
+  <div class="brand" onclick="location.hash='#/'"><span class="chip">EEM305</span><span>Simulation Lab</span></div>
+  <div class="links">
+    <a href="#/" id="navHome"></a>
+    <a href="#/instructions" id="navIsa"></a>
+    <a href="#/settings" id="navSet"></a>
+    <a href="#/about" id="navDev"></a>
+  </div>
+</nav>
+<div id="app"></div>
+<footer id="footer"></footer>
+<script>
+// Dosyanın değiştirilmemiş hâli (ayarları dosyaya yazarken kullanılır)
+const PRISTINE_HTML = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+
+// =====================================================================
+// KALICI AYARLAR — "Ayarları dosyaya kaydet" bu bloğu günceller
+// =====================================================================
+/*SETTINGS_BEGIN*/const FILE_SETTINGS = {"lang":"en","theme":"system","animation":true,"resume":true};/*SETTINGS_END*/
+
+// =====================================================================
+// DERS ve PROJE BİLGİLERİ
+// =====================================================================
+const COURSE = {
+  code: "EEM305",
+  name: { en: "Microprocessors", tr: "Mikroişlemciler" },
+  instructor: "Prof. Dr. Şuayb Çağrı Yener",
+  uni: { en: "Sakarya University", tr: "Sakarya Üniversitesi" }
+};
+// Kaynaklar (Geliştirici sayfasında listelenir)
+const RESOURCES = {
+  libs: [
+    { name: "CodeMirror 6", ver: "6.0.2", lic: "MIT", url: "https://codemirror.net/", use: { en: "Code editor in Code Lab (syntax highlighting, error markers, autocompletion)", tr: "Code Lab kod editörü (sözdizimi renklendirme, hata işaretleri, otomatik tamamlama)" } },
+    { name: "Chart.js", ver: "4.6.1", lic: "MIT", url: "https://www.chartjs.org/", use: { en: "Timeline chart of SP and A across the simulation steps", tr: "Simülasyon adımları boyunca SP ve A zaman çizelgesi grafiği" } },
+    { name: "GSAP + MotionPathPlugin", ver: "3.15.1", lic: "GSAP Standard License", url: "https://gsap.com/", use: { en: "Data-packet animations along the data-flow arrows and UI transitions", tr: "Veri akışı okları üzerindeki veri paketi animasyonları ve arayüz geçişleri" } },
+    { name: "Lucide Icons", ver: "1.70.0", lic: "ISC", url: "https://lucide.dev/", use: { en: "Interface icons", tr: "Arayüz ikonları" } },
+    { name: "Inter", ver: "variable", lic: "SIL OFL 1.1", url: "https://rsms.me/inter/", use: { en: "Interface typeface", tr: "Arayüz yazı tipi" } },
+    { name: "JetBrains Mono", ver: "variable", lic: "SIL OFL 1.1", url: "https://www.jetbrains.com/lp/mono/", use: { en: "Monospaced typeface for code, addresses and bytes", tr: "Kod, adres ve byte'lar için eş aralıklı yazı tipi" } }
+  ],
+  libsNote: {
+    en: "All libraries and fonts are embedded in this single HTML file, so it works offline. The 8051 assembler and emulator were written from scratch for this project.",
+    tr: "Tüm kütüphaneler ve yazı tipleri bu tek HTML dosyasının içine gömülüdür; uygulama internet bağlantısı olmadan çalışır. 8051 assembler ve emülatörü bu proje için sıfırdan yazılmıştır."
+  },
+  refs: [
+    { text: "Intel Corporation, MCS® 51 Microcontroller Family User's Manual, Order No. 272383-002, 1994." },
+    { text: "M. A. Mazidi, J. G. Mazidi, R. D. McKinlay, The 8051 Microcontroller and Embedded Systems: Using Assembly and C, 2nd ed., Pearson Prentice Hall, 2006." },
+    { text: { en: "EEM305 Microprocessors lecture notes, Sakarya University.", tr: "EEM305 Mikroişlemciler ders notları, Sakarya Üniversitesi." } }
+  ],
+  web: [
+    { text: "MDN Web Docs — File System API", url: "https://developer.mozilla.org/en-US/docs/Web/API/File_System_API" },
+    { text: "MDN Web Docs — IndexedDB API", url: "https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API" },
+    { text: "MDN Web Docs — Window.localStorage", url: "https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage" },
+    { text: "MDN Web Docs — SVG", url: "https://developer.mozilla.org/en-US/docs/Web/SVG" }
+  ]
+};
+const PROJECT = {
+  email: "sercan.sebetci@ogr.sakarya.edu.tr",
+  about: {
+    en: "Prepared by Sercan Sebetçi as a simulation tool for the EEM305 Microprocessors course taught by Prof. Dr. Şuayb Çağrı Yener.",
+    tr: "Prof. Dr. Şuayb Çağrı Yener tarafından verilen EEM305 Mikroişlemciler dersi kapsamında bir simülasyon aracı olarak Sercan Sebetçi tarafından hazırlandı."
+  }
+};
+
+// =====================================================================
+// Arayüz metinleri (EN varsayılan, TR opsiyon)
+// =====================================================================
+const UI = {
+  en: {
+    home: "Home", developer: "About", settings: "Settings", instructions: "Instructions",
+    isaTitle: "8051 Instruction Set", isaLead: "All {n} instructions of the MCS-51 family, grouped by function. The operation column uses register-transfer notation; opcodes are in hex.",
+    isaLegend: "<b>Rn</b> R0–R7 · <b>@Ri</b> @R0 / @R1 (indirect) · <b>direct</b> 8-bit internal RAM or SFR address · <b>#data</b> 8-bit constant · <b>#data16</b> 16-bit constant · <b>bit</b> bit address · <b>rel</b> signed 8-bit offset (−128…+127) · <b>addr11 / addr16</b> 11- / 16-bit address · <b>(x)</b> contents of x · <b>Cycles</b> machine cycles (12 oscillator periods each)",
+    isaSearch: "Search instruction, operation or opcode…", isaAll: "All", isaColIns: "Instruction", isaColOp: "Operation", isaColCyc: "Cycles", isaColFlags: "Flags", isaColSim: "Code Lab",
+    isaSim: "SIMULATED", isaRef: "REFERENCE", isaNone: "No instruction matches the search.",
+    heroTitle: "8051 Microcontroller Simulation Lab",
+    heroSub: "An interactive learning environment for the MCS-51 (8051) architecture. Run each instruction step by step and watch how the program counter, stack pointer, registers, internal RAM and flash memory change — or write your own assembly program and simulate it.",
+    sims: "Simulations", ready: "Ready", soon: "Coming Soon", instructor: "Instructor",
+    back: "All Simulations", reset: "Reset", prev: "Back", next: "Next", step: "Step", editCode: "Edit Code", timeline: "Timeline · SP and A", timelineHint: "click to jump",
+    noneYet: "nothing yet (reset state)", loading: "restoring (PCL not loaded yet)", pointsTo: "points to", noInstrAt: "no instruction",
+    flash: "Flash Program Memory", flashNote: "read-only at runtime",
+    ram: "Internal RAM", ramNote: "00h–0Fh · 1 byte per cell", ramNoteGrid: "00h–7Fh · 128 bytes",
+    flowTitle: "Data Flow", flowNote: "Flash ↔ CPU (PC, SP) ↔ RAM",
+    opcode: "Opcode Breakdown", inside: "What Happens Inside the CPU", why: "Explanation",
+    addr: "Address", bytes: "Bytes", label: "Label", instr: "Instruction", value: "Value", region: "Region", state: "State",
+    lgExec: "executing in this step", lgPc: "PC points here (next fetch)",
+    lgSp: "top of stack", lgStack: "valid stack data", lgStale: "left over after RET", lgChg: "changed in this step", lgBank: "active register bank",
+    lgFlow: "data moving in this step", lgPcPtr: "PC → flash address", lgSpPtr: "SP → stack top", bus: "internal bus",
+    noInstr: "No instruction executed yet. PC = 0000h, so the first byte fetched will be flash[0000h].",
+    pch: "PC high", pcl: "PC low", pc16: "PC · 16 bit", sp8: "SP · 8 bit", acc: "A · 8 bit", p1: "P1 · 8 bit", bReg: "B · 8 bit", dptr: "DPTR · 16 bit", psw: "PSW · CY",
+    bank: "Bank", cpu: "CPU", ramShort: "RAM", flashShort: "FLASH", stopped: "Stopped",
+    aboutProject: "About This Project", contact: "Contact", security: "Security",
+    secItems: ["Runs entirely inside your browser's sandbox; nothing is installed on your computer.", "Network access is disabled by a Content Security Policy written at the top of the file: the page cannot send data to or load anything from the internet.", "It touches a file only when you press “Save Settings to File” and choose the file yourself.", "Source code, build script and SHA-256 checksums are published on GitHub, so anyone can verify the file."], resources: "Resources", resLibs: "Libraries", resRefs: "References", resWeb: "Web Technologies",
+    setTitle: "Settings", setLang: "Language", setLangHint: "Interface language",
+    setTheme: "Theme", setThemeHint: "Color scheme", themeSystem: "System", themeLight: "Light", themeDark: "Dark",
+    setAnim: "Flow Animation", setAnimHint: "Animated arrows in the data-flow diagram", on: "On", off: "Off",
+    setResume: "Resume Position", setResumeHint: "Reopen a simulation at the last viewed step", yes: "Yes", no: "No",
+    saveFile: "Save Settings to File", resetDefaults: "Restore File Defaults", unlink: "Unlink File",
+    linkedTo: "Linked file:", notLinked: "No file linked yet.",
+    savedFile: "Settings written to", savedDownload: "Your browser cannot write files directly. A copy with your settings was downloaded; replace the old file with it.",
+    restored: "Restored the settings stored in the file.", unlinked: "File link removed.", permDenied: "Write permission was not granted.",
+    persistInfo: "Changes apply instantly in this browser. To keep them in the file, press “Save Settings to File” — you pick the file only once.",
+    keysHint: "Keys: ← → step · Home reset",
+    labTitle: "Code Lab", labRun: "Assemble & Simulate", labOpen: "Open .asm File", labSave: "Download .asm", labExamples: "Load example…",
+    labErrors: "Assembler", labOk: "Ready. Press “Assemble & Simulate”.", labLine: "Line", labRef: "Quick Reference",
+    labRefBody: "Labels end with <code>:</code> · comments start with <code>;</code><br>Directives: <code>ORG</code> <code>EQU</code> <code>DB</code> <code>END</code><br>Numbers: <code>0FFh</code> <code>0x1F</code> <code>1010b</code> <code>25</code> <code>'A'</code> · current address: <code>$</code><br>Bits: <code>P1.0</code> <code>ACC.7</code> <code>20h.3</code> <code>CY</code><br><code>CALL</code>/<code>JMP</code> are assembled as <code>LCALL</code>/<code>LJMP</code>.<br>The simulation stops at a jump to itself (<code>SJMP $</code>) or after 1500 steps. Interrupts, timers and external memory are not simulated.",
+    labSupported: "Supported Instructions", labTitleSim: "Code Lab: Your Program",
+    discardConfirm: "Replace the current code with the example?"
+  },
+  tr: {
+    home: "Ana Sayfa", developer: "Hakkında", settings: "Ayarlar", instructions: "Komut Seti",
+    isaTitle: "8051 Komut Seti", isaLead: "MCS-51 ailesinin {n} komutunun tamamı, işlevlerine göre gruplanmış hâlde. İşlem sütunu register transfer gösterimini kullanır; opcode'lar onaltılıktır.",
+    isaLegend: "<b>Rn</b> R0–R7 · <b>@Ri</b> @R0 / @R1 (dolaylı) · <b>direct</b> 8 bit dahili RAM ya da SFR adresi · <b>#data</b> 8 bit sabit · <b>#data16</b> 16 bit sabit · <b>bit</b> bit adresi · <b>rel</b> işaretli 8 bit ofset (−128…+127) · <b>addr11 / addr16</b> 11 / 16 bit adres · <b>(x)</b> x'in içeriği · <b>Çevrim</b> makine çevrimi (her biri 12 osilatör periyodu)",
+    isaSearch: "Komut, işlem ya da opcode ara…", isaAll: "Tümü", isaColIns: "Komut", isaColOp: "İşlem", isaColCyc: "Çevrim", isaColFlags: "Bayraklar", isaColSim: "Code Lab",
+    isaSim: "SİMÜLE", isaRef: "BAŞVURU", isaNone: "Aramayla eşleşen komut yok.",
+    heroTitle: "8051 Mikrodenetleyici Simülasyon Laboratuvarı",
+    heroSub: "MCS-51 (8051) mimarisi için etkileşimli bir öğrenme ortamı. Komutları adım adım çalıştırarak program sayacı, stack pointer, register'lar, dahili RAM ve flash bellekteki değişimleri izleyebilir, kendi assembly programını yazıp simüle edebilirsin.",
+    sims: "Simülasyonlar", ready: "Hazır", soon: "Yakında", instructor: "Ders Sorumlusu",
+    back: "Tüm Simülasyonlar", reset: "Baştan", prev: "Geri", next: "İleri", step: "Adım", editCode: "Kodu Düzenle", timeline: "Zaman Çizelgesi · SP ve A", timelineHint: "adıma gitmek için tıkla",
+    noneYet: "henüz yok (reset durumu)", loading: "geri yükleniyor (PCL henüz yüklenmedi)", pointsTo: "gösteriyor", noInstrAt: "komut yok",
+    flash: "Flash Program Belleği", flashNote: "çalışırken sadece okunur",
+    ram: "Dahili RAM", ramNote: "00h–0Fh · hücre başına 1 byte", ramNoteGrid: "00h–7Fh · 128 byte",
+    flowTitle: "Veri Akışı", flowNote: "Flash ↔ CPU (PC, SP) ↔ RAM",
+    opcode: "Opcode Açılımı", inside: "İşlemcinin İçinde Olanlar", why: "Açıklama",
+    addr: "Adres", bytes: "Byte'lar", label: "Etiket", instr: "Komut", value: "Değer", region: "Bölge", state: "Durum",
+    lgExec: "bu adımda işletilen", lgPc: "PC'nin gösterdiği adres (sıradaki okuma)",
+    lgSp: "stack tepesi", lgStack: "geçerli stack verisi", lgStale: "RET sonrası kalan", lgChg: "bu adımda değişen", lgBank: "aktif register bankı",
+    lgFlow: "bu adımda taşınan veri", lgPcPtr: "PC → flash adresi", lgSpPtr: "SP → stack tepesi", bus: "iç veri yolu",
+    noInstr: "Henüz komut işletilmedi. PC = 0000h, yani ilk okunacak byte flash[0000h].",
+    pch: "PC yüksek", pcl: "PC düşük", pc16: "PC · 16 bit", sp8: "SP · 8 bit", acc: "A · 8 bit", p1: "P1 · 8 bit", bReg: "B · 8 bit", dptr: "DPTR · 16 bit", psw: "PSW · CY",
+    bank: "Bank", cpu: "CPU", ramShort: "RAM", flashShort: "FLASH", stopped: "Durdu",
+    aboutProject: "Proje Hakkında", contact: "İletişim", security: "Güvenlik",
+    secItems: ["Tamamen tarayıcının korumalı ortamında çalışır; bilgisayara hiçbir şey kurmaz.", "Ağ erişimi, dosyanın başında yazılı bir İçerik Güvenliği Politikası (CSP) ile kapatılmıştır: sayfa internete veri gönderemez ve internetten hiçbir şey yükleyemez.", "Bir dosyaya yalnızca “Ayarları Dosyaya Kaydet” butonuna basıp dosyayı kendin seçtiğinde erişir.", "Kaynak kod, build betiği ve SHA-256 özet değerleri GitHub'da yayınlanmıştır; herkes dosyayı doğrulayabilir."], resources: "Kaynaklar", resLibs: "Kütüphaneler", resRefs: "Başvuru Kaynakları", resWeb: "Web Teknolojileri",
+    setTitle: "Ayarlar", setLang: "Dil", setLangHint: "Arayüz dili",
+    setTheme: "Tema", setThemeHint: "Renk düzeni", themeSystem: "Sistem", themeLight: "Açık", themeDark: "Koyu",
+    setAnim: "Akış Animasyonu", setAnimHint: "Veri akışı diyagramındaki hareketli oklar", on: "Açık", off: "Kapalı",
+    setResume: "Kaldığın Yerden Devam", setResumeHint: "Simülasyonu son bakılan adımdan aç", yes: "Evet", no: "Hayır",
+    saveFile: "Ayarları Dosyaya Kaydet", resetDefaults: "Dosyadaki Ayarlara Dön", unlink: "Dosya Bağlantısını Kaldır",
+    linkedTo: "Bağlı dosya:", notLinked: "Henüz bağlı dosya yok.",
+    savedFile: "Ayarlar şu dosyaya yazıldı:", savedDownload: "Tarayıcın dosyaya doğrudan yazamıyor. Ayarlarını içeren bir kopya indirildi; eski dosyayı bununla değiştir.",
+    restored: "Dosyada kayıtlı ayarlara dönüldü.", unlinked: "Dosya bağlantısı kaldırıldı.", permDenied: "Yazma izni verilmedi.",
+    persistInfo: "Değişiklikler bu tarayıcıda anında uygulanır. Dosyada kalıcı olması için “Ayarları Dosyaya Kaydet”e bas; dosyayı yalnızca ilk seferde seçersin.",
+    keysHint: "Klavye: ← → adım · Home baştan",
+    labTitle: "Code Lab", labRun: "Derle ve Simüle Et", labOpen: ".asm Dosyası Aç", labSave: ".asm İndir", labExamples: "Örnek yükle…",
+    labErrors: "Assembler", labOk: "Hazır. “Derle ve Simüle Et” butonuna bas.", labLine: "Satır", labRef: "Hızlı Başvuru",
+    labRefBody: "Etiketler <code>:</code> ile biter · yorumlar <code>;</code> ile başlar<br>Direktifler: <code>ORG</code> <code>EQU</code> <code>DB</code> <code>END</code><br>Sayılar: <code>0FFh</code> <code>0x1F</code> <code>1010b</code> <code>25</code> <code>'A'</code> · bulunulan adres: <code>$</code><br>Bitler: <code>P1.0</code> <code>ACC.7</code> <code>20h.3</code> <code>CY</code><br><code>CALL</code>/<code>JMP</code>, <code>LCALL</code>/<code>LJMP</code> olarak derlenir.<br>Simülasyon kendine atlayan bir komutta (<code>SJMP $</code>) ya da 1500 adımdan sonra durur. Kesmeler, timer'lar ve harici bellek simüle edilmez.",
+    labSupported: "Desteklenen Komutlar", labTitleSim: "Code Lab: Senin Programın",
+    discardConfirm: "Mevcut kod örnekle değiştirilsin mi?"
+  }
+};
+
+// =====================================================================
+// Simülasyon kataloğu — yeni simülasyon buraya eklenir
+// =====================================================================
+const SIMULATIONS = [
+  { id: "call-stack", icon: "layers", status: "ready", route: "#/sim/call-stack",
+    title: { en: "Subroutine Calls: ACALL / LCALL / RET", tr: "Alt Program Çağrıları: ACALL / LCALL / RET" },
+    desc: { en: "Follow PC, SP, the stack in internal RAM and the flash bytes through nested subroutine calls, split into micro-steps.",
+            tr: "İç içe alt program çağrılarında PC, SP, dahili RAM'deki stack ve flash byte'larını mikro adımlarla takip et." },
+    tags: ["PC", "SP", "Stack", "Flash", "RAM"] },
+  { id: "code-lab", icon: "code-xml", status: "ready", route: "#/lab",
+    title: { en: "Code Lab: Write and Simulate Your Own Code", tr: "Code Lab: Kendi Kodunu Yaz ve Simüle Et" },
+    desc: { en: "Write or open 8051 assembly, assemble it in the browser and step through it with the same flash, RAM and data-flow views.",
+            tr: "8051 assembly kodu yaz ya da dosyadan aç, tarayıcıda derle ve aynı flash, RAM ve veri akışı görünümleriyle adım adım izle." },
+    tags: ["ASM", "Assembler", "Emulator"] },
+  { id: "interrupts", icon: "zap", status: "soon", title: { en: "Interrupts and the Vector Table", tr: "Kesmeler ve Vektör Tablosu" },
+    desc: { en: "How an interrupt pushes PC and jumps to 0003h, 000Bh … and how RETI returns.", tr: "Kesmenin PC'yi stack'e atıp 0003h, 000Bh … adreslerine atlaması ve RETI ile dönüş." }, tags: ["IE", "RETI", "Vectors"] },
+  { id: "addressing", icon: "route", status: "soon", title: { en: "Addressing Modes", tr: "Adresleme Modları" },
+    desc: { en: "Immediate, direct, register, indirect and indexed addressing side by side.", tr: "Anlık, doğrudan, register, dolaylı ve indisli adreslemenin karşılaştırması." }, tags: ["MOV", "@Ri", "DPTR"] },
+  { id: "timers", icon: "timer", status: "soon", title: { en: "Timer / Counter Modes", tr: "Timer / Counter Modları" },
+    desc: { en: "TMOD, TCON and the four timer modes with overflow behaviour.", tr: "TMOD, TCON ve dört timer modunun taşma davranışı." }, tags: ["TMOD", "TCON", "TF0"] }
+];
+
+// =====================================================================
+// Ayar yönetimi: dosya varsayılanları + tarayıcı hafızası
+// =====================================================================
+const LS_KEY = "eem305.settings";
+const ls = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} },
+  del(k) { try { localStorage.removeItem(k); } catch (e) {} }
+};
+let settings = { ...FILE_SETTINGS, ...JSON.parse(ls.get(LS_KEY, "{}")) };
+const lang = () => settings.lang;
+const t = k => UI[lang()][k];
+const L = o => (typeof o === "object" && o !== null && "en" in o) ? o[lang()] : o;
+const $ = id => document.getElementById(id);
+const app = $("app");
+let activeKeyHandler = null;
+
+function setSetting(k, v) { settings[k] = v; ls.set(LS_KEY, JSON.stringify(settings)); route(); }
+function effectiveTheme() {
+  if (settings.theme === "system") return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  return settings.theme;
+}
+
+// ---------- Dosya bağlantısı (IndexedDB'de saklanan dosya tutamacı) ----------
+const kv = {
+  db() { return new Promise((res, rej) => { const r = indexedDB.open("eem305", 1); r.onupgradeneeded = () => r.result.createObjectStore("kv"); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); },
+  async get(k) { try { const db = await this.db(); return await new Promise(res => { const q = db.transaction("kv").objectStore("kv").get(k); q.onsuccess = () => res(q.result); q.onerror = () => res(undefined); }); } catch (e) { return undefined; } },
+  async set(k, v) { try { const db = await this.db(); await new Promise(res => { const tx = db.transaction("kv", "readwrite"); tx.objectStore("kv").put(v, k); tx.oncomplete = res; tx.onerror = res; }); } catch (e) {} },
+  async del(k) { try { const db = await this.db(); await new Promise(res => { const tx = db.transaction("kv", "readwrite"); tx.objectStore("kv").delete(k); tx.oncomplete = res; tx.onerror = res; }); } catch (e) {} }
+};
+function htmlWithSettings() {
+  return PRISTINE_HTML.replace(/\/\*SETTINGS_BEGIN\*\/[\s\S]*?\/\*SETTINGS_END\*\//,
+    "/*SETTINGS_BEGIN*/const FILE_SETTINGS = " + JSON.stringify(settings) + ";/*SETTINGS_END*/");
+}
+async function saveSettingsToFile() {
+  const html = htmlWithSettings();
+  const name = decodeURIComponent(location.pathname.split("/").pop() || "EEM305SimLab.html");
+  if (window.showSaveFilePicker) {
+    let h = await kv.get("fileHandle");
+    if (!h) {
+      try { h = await window.showSaveFilePicker({ suggestedName: name, types: [{ description: "HTML", accept: { "text/html": [".html"] } }] }); }
+      catch (e) { if (e && e.name === "AbortError") return ""; h = null; }
+      if (h) await kv.set("fileHandle", h);
+    }
+    if (h) {
+      let perm = await h.queryPermission({ mode: "readwrite" });
+      if (perm !== "granted") perm = await h.requestPermission({ mode: "readwrite" });
+      if (perm !== "granted") return t("permDenied");
+      const w = await h.createWritable(); await w.write(html); await w.close();
+      return t("savedFile") + " " + h.name;
+    }
+  }
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([html], { type: "text/html" }));
+  a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  return t("savedDownload");
+}
+
+function applyChrome() {
+  document.documentElement.lang = lang();
+  document.documentElement.setAttribute("data-theme", effectiveTheme());
+  document.body.classList.toggle("noAnim", !settings.animation);
+  document.body.classList.toggle("gsapOn", !!(window.gsap && window.MotionPathPlugin && settings.animation));
+  $("navHome").textContent = t("home");
+  $("navDev").textContent = t("developer");
+  $("navSet").textContent = t("settings");
+  $("navIsa").textContent = t("instructions");
+  $("footer").textContent = COURSE.code + " " + L(COURSE.name) + " · " + COURSE.instructor + " · " + L(COURSE.uni);
+}
+window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => applyChrome());
+document.addEventListener("keydown", e => { if (activeKeyHandler) activeKeyHandler(e); });
+
+// =====================================================================
+// Yönlendirme: #/ · #/sim/call-stack · #/lab · #/lab/run · #/developer · #/settings
+// =====================================================================
+function route() {
+  applyChrome();
+  activeKeyHandler = null;
+  const h = location.hash.replace(/^#/, "") || "/";
+  ["navHome", "navDev", "navSet", "navIsa"].forEach(id => $(id).classList.remove("active"));
+  document.body.classList.remove("simMode");
+  if (h === "/sim/call-stack") { document.body.classList.add("simMode"); SimView(app, buildCallStackModel()); return; }
+  if (h === "/lab/run") {
+    const m = labModel || buildLabModel(getLabCode());
+    if (m) { labModel = m; document.body.classList.add("simMode"); SimView(app, m); return; }
+    location.hash = "#/lab"; return;
+  }
+  window.scrollTo(0, 0);
+  if (h === "/lab") { renderLab(); return; }
+  if (h === "/about" || h === "/developer") { $("navDev").classList.add("active"); renderDeveloper(); return; }
+  if (h === "/instructions") { $("navIsa").classList.add("active"); renderInstructions(); return; }
+  if (h === "/settings") { $("navSet").classList.add("active"); renderSettings(); return; }
+  $("navHome").classList.add("active");
+  renderHome();
+}
+window.addEventListener("hashchange", route);
+
+// ---------- Ana sayfa ----------
+function renderHome() {
+  app.innerHTML =
+    '<div class="wrap"><div class="card"><div class="tags" style="margin-bottom:14px">' +
+    '<span class="tag mono" style="font-weight:700;color:var(--accent)">' + COURSE.code + '</span><span class="tag">' + L(COURSE.name) +
+    '</span><span class="tag">' + t("instructor") + ": " + COURSE.instructor + '</span><span class="tag">' + L(COURSE.uni) + "</span></div>" +
+    "<h1>" + t("heroTitle") + '</h1><p class="lead">' + t("heroSub") + "</p></div>" +
+    '<div class="secTitle">' + t("sims") + '</div><div class="grid">' +
+    SIMULATIONS.map(s =>
+      '<div class="simCard ' + s.status + '" data-route="' + (s.route || "") + '">' +
+      '<div class="cardTop"><span class="cardIcon">' + ic(s.icon) + '</span><span class="status ' + s.status + '">' + (s.status === "ready" ? t("ready") : t("soon")) + "</span></div>" +
+      '<div class="title">' + L(s.title) + '</div><div class="desc">' + L(s.desc) + "</div>" +
+      '<div class="tags">' + s.tags.map(x => '<span class="tag mono">' + x + "</span>").join("") + "</div></div>").join("") +
+    "</div></div>";
+  app.querySelectorAll(".simCard.ready").forEach(c => c.onclick = () => location.hash = c.dataset.route);
+  if (window.gsap && settings.animation) {
+    gsap.from(".wrap > .card", { y: 12, opacity: 0, duration: 0.45, ease: "power2.out" });
+    gsap.from(".simCard", { y: 18, opacity: 0, duration: 0.45, stagger: 0.06, delay: 0.1, ease: "power2.out", clearProps: "transform,opacity" });
+  }
+}
+
+// ---------- Geliştirici ----------
+function renderDeveloper() {
+  app.innerHTML = '<div class="wrap" style="max-width:820px"><div class="card">' +
+    "<h2>" + ic("info") + t("aboutProject") + '</h2><p style="margin:0 0 22px;font-size:16px">' + L(PROJECT.about) + "</p>" +
+    "<h2>" + ic("mail") + t("contact") + '</h2><a class="mono" href="mailto:' + PROJECT.email + '">' + PROJECT.email + "</a></div>" +
+    '<div class="card" style="margin-top:16px"><h2>' + ic("shield-check") + t("security") + '</h2><ul class="resL">' + t("secItems").map(x => "<li>" + x + "</li>").join("") + "</ul></div>" +
+    '<div class="card" style="margin-top:16px"><h2>' + ic("library") + t("resources") + "</h2>" +
+    '<div class="resH">' + t("resLibs") + '</div><table class="libTbl">' + RESOURCES.libs.map(l => '<tr><td><a href="' + l.url + '" target="_blank" rel="noopener">' + l.name + '</a></td><td class="mono">' + l.ver + "</td><td>" + l.lic + "</td><td>" + L(l.use) + "</td></tr>").join("") + "</table>" +
+    '<p class="resP" style="margin-top:8px;color:var(--muted);font-size:13.5px">' + L(RESOURCES.libsNote) + "</p>" +
+    '<div class="resH">' + t("resRefs") + '</div><ol class="resL">' + RESOURCES.refs.map(r => "<li>" + L(r.text) + "</li>").join("") + "</ol>" +
+    '<div class="resH">' + t("resWeb") + '</div><ul class="resL">' + RESOURCES.web.map(r => '<li><a href="' + r.url + '" target="_blank" rel="noopener">' + r.text + "</a></li>").join("") + "</ul>" +
+    "</div></div>";
+}
+
+// ---------- Ayarlar ----------
+async function renderSettings() {
+  const seg = (key, opts) => '<div class="seg">' + opts.map(([v, lbl]) =>
+    '<button data-k="' + key + '" data-v=\'' + JSON.stringify(v) + '\' class="' + (settings[key] === v ? "on" : "") + '">' + lbl + "</button>").join("") + "</div>";
+  const row = (lbl, hint, ctl) => '<div class="setRow"><div><div class="setLbl">' + lbl + '</div><div class="hint">' + hint + "</div></div><div>" + ctl + "</div></div>";
+  app.innerHTML = '<div class="wrap" style="max-width:820px"><div class="card"><h2>' + t("setTitle") + "</h2>" +
+    row(t("setLang"), t("setLangHint"), seg("lang", [["en", "English"], ["tr", "Türkçe"]])) +
+    row(t("setTheme"), t("setThemeHint"), seg("theme", [["system", t("themeSystem")], ["light", t("themeLight")], ["dark", t("themeDark")]])) +
+    row(t("setAnim"), t("setAnimHint"), seg("animation", [[true, t("on")], [false, t("off")]])) +
+    row(t("setResume"), t("setResumeHint"), seg("resume", [[true, t("yes")], [false, t("no")]])) +
+    '<div class="saveBar"><button class="btn primary" id="saveFile">' + t("saveFile") + '</button><button class="btn" id="resetDef">' + t("resetDefaults") +
+    '</button><button class="btn" id="unlink" style="display:none">' + t("unlink") + '</button><span class="saveMsg" id="saveMsg"></span></div>' +
+    '<div class="infoBox"><div id="linkInfo" style="margin-bottom:6px"></div>' + t("persistInfo") + "</div></div></div>";
+  app.querySelectorAll(".seg button").forEach(b => b.onclick = () => setSetting(b.dataset.k, JSON.parse(b.dataset.v)));
+  const showLink = async () => {
+    const h = window.showSaveFilePicker ? await kv.get("fileHandle") : null;
+    if (!$("linkInfo")) return;
+    $("linkInfo").innerHTML = h ? "<b>" + t("linkedTo") + "</b> <span class=\"mono\">" + h.name + "</span>" : t("notLinked");
+    $("unlink").style.display = h ? "" : "none";
+  };
+  $("saveFile").onclick = async () => { try { $("saveMsg").textContent = await saveSettingsToFile(); } catch (e) { $("saveMsg").textContent = String(e.message || e); } showLink(); };
+  $("resetDef").onclick = () => { ls.del(LS_KEY); settings = { ...FILE_SETTINGS }; route(); setTimeout(() => $("saveMsg") && ($("saveMsg").textContent = t("restored")), 0); };
+  $("unlink").onclick = async () => { await kv.del("fileHandle"); $("saveMsg").textContent = t("unlinked"); showLink(); };
+  showLink();
+}
+
+// =====================================================================
+// ORTAK SİMÜLASYON GÖRÜNÜMÜ (yerleşik örnek ve Code Lab aynı görünümü kullanır)
+// model: { id, title, FLASH, ROW, STEPS, opcodeInfo(row), cards(p,v), ramMode, flowRam(v,s), portBox(v), extra }
+// =====================================================================
+// Lucide ikonları (gömülü SVG)
+const ICONS = /*@@ICONS@@*/{};
+const ic = (n, cls) => ICONS[n] ? '<svg class="ic' + (cls ? " " + cls : "") + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ICONS[n] + "</svg>" : "";
+if (window.gsap) { gsap.config({ nullTargetWarn: false }); if (window.MotionPathPlugin) gsap.registerPlugin(MotionPathPlugin); }
+const escHtml = x => String(x).replace(/&/g, "&amp;").replace(/</g, "&lt;");
+const h2x = n => (n & 255).toString(16).toUpperCase().padStart(2, "0");
+const bin8 = h => parseInt(h, 16).toString(2).padStart(8, "0").replace(/(\d{4})(\d{4})/, "$1 $2");
+
+function SimView(root, model) {
+  const { FLASH, ROW, STEPS } = model;
+  const grid = model.ramMode === "grid";
+  root.innerHTML =
+    '<div class="simPage"><div class="simHead">' +
+      '<div class="toolbar"><button class="btn" id="bBack">' + ic("arrow-left") + t("back") + "</button>" + (model.extra ? '<button class="btn" id="bExtra">' + ic("pencil-line") + model.extra.label + "</button>" : "") +
+      '<span class="chip">' + COURSE.code + '</span><span class="title">' + L(model.title) + '</span><span class="spacer"></span>' +
+      '<span class="keys">' + t("keysHint") + '</span><button class="iconBtn" id="bSet" title="' + t("settings") + '">' + ic("settings") + "</button></div>" +
+      '<div class="progress"><div id="prog"></div></div>' +
+      '<div class="headRow"><div class="stepInfo"><div><span class="stepTitle" id="sTitle"></span><span class="stepSub" id="sSub"></span></div><div class="pills" id="sLine"></div></div>' +
+      '<div class="ctrl"><div class="ctrlBtns"><button class="btn big" id="bReset" title="Home">' + ic("rotate-ccw") + t("reset") + '</button><button class="btn big" id="bPrev" title="←">' + ic("chevron-left") + t("prev") +
+      '</button><button class="btn primary big" id="bNext" title="→">' + t("next") + ic("chevron-right", "r") + '</button></div><span class="counter mono" id="cnt"></span></div>' +
+      '<div class="regs" id="regs"></div></div>' +
+    "</div>" +
+    '<div class="cols">' +
+      '<section class="panel"><div class="pTitle">' + t("flash") + "<small>" + t("flashNote") + '</small></div><div class="tblWrap' + (model.scrollFlash ? " scroll" : "") + '" id="fWrap"><table class="mono" id="fTab"></table></div>' +
+        '<div class="legend"><span><span class="b exec">EXEC</span>' + t("lgExec") + '</span><span><span class="b pc">PC</span>' + t("lgPc") + "</span></div></section>" +
+      '<section class="panel"><div class="pTitle">' + t("ram") + "<small>" + (grid ? t("ramNoteGrid") : t("ramNote")) + '</small></div><div class="tblWrap"><table class="mono' + (grid ? " ramGrid" : "") + '" id="rTab"></table></div>' +
+        (grid
+          ? '<div class="legend"><span><span class="b sp">SP</span>' + t("lgSp") + '</span><span><span class="b stack">STACK</span>' + t("lgStack") + '</span><span><span class="b" style="background:var(--chgBg);color:var(--chg)">XX</span>' + t("lgChg") + '</span><span><span class="b" style="background:var(--soft);color:var(--muted)">Rn</span>' + t("lgBank") + "</span></div>"
+          : '<div class="legend"><span><span class="b sp">SP</span>' + t("lgSp") + '</span><span><span class="b stack">STACK</span>' + t("lgStack") + '</span><span><span class="b stale">OLD</span>' + t("lgStale") + "</span></div>") +
+      "</section>" +
+      '<section class="panel"><div class="pTitle">' + t("flowTitle") + "<small>" + t("flowNote") + '</small></div><div class="flowBox" id="flow"></div>' +
+        '<div class="legend"><span><span class="sw" style="background:var(--chg)"></span>' + t("lgFlow") + '</span><span><span class="sw" style="background:var(--pc)"></span>' + t("lgPcPtr") + '</span><span><span class="sw" style="background:var(--accent)"></span>' + t("lgSpPtr") + "</span></div></section>" +
+      '<section class="panel full"><div class="explGrid">' +
+        '<div><div class="sub">' + t("opcode") + '</div><div id="opv"></div></div>' +
+        '<div><div class="sub">' + t("inside") + '</div><ol class="ops" id="ops"></ol></div>' +
+        '<div><div class="sub">' + t("why") + '</div><div class="note" id="note"></div></div>' +
+        '<div><div class="sub">' + ic("activity") + t("timeline") + ' <span class="subHint">· ' + t("timelineHint") + '</span></div><div class="tlBox"><canvas id="tl"></canvas></div></div>' +
+      "</div></section>" +
+    "</div></div>";
+
+  const stepKey = "eem305.step." + model.id;
+  let cur = settings.resume ? (+ls.get(stepKey, 0) || 0) : 0;
+  if (cur >= STEPS.length || cur < 0) cur = 0;
+  const showVal = (o, n) => o !== n ? '<span class="old">' + o + '</span><span class="chg">' + n + "</span>" : n;
+
+  function render() {
+    ls.set(stepKey, cur);
+    const s = STEPS[cur], v = s.v, p = (STEPS[cur - 1] || STEPS[0]).v;
+    $("cnt").textContent = t("step") + " " + cur + " / " + (STEPS.length - 1);
+    $("prog").style.width = (cur / Math.max(1, STEPS.length - 1) * 100) + "%";
+    $("sTitle").textContent = L(s.t);
+    $("sSub").innerHTML = L(s.sub) + (s.stop ? '<span class="stopBadge">' + t("stopped") + "</span>" : "");
+    $("bPrev").disabled = cur === 0;
+    $("bNext").disabled = cur === STEPS.length - 1;
+
+    const pcKnown = v.pcl !== "--", pcAddr = v.pch + v.pcl;
+    const pcRow = pcKnown ? ROW[pcAddr] : undefined;
+    const execTxt = s.row < 0 ? t("noneYet") : FLASH[s.row].asm + " @ " + FLASH[s.row].a + "h";
+    const pcTxt = pcKnown ? pcAddr + "h → " + (pcRow !== undefined ? FLASH[pcRow].asm : t("noInstrAt")) : t("loading");
+    $("sLine").innerHTML = '<span class="pill exec mono"><b>EXEC</b> ' + execTxt + '</span><span class="pill pcp mono"><b>PC</b> ' + t("pointsTo") + " " + pcTxt + "</span>";
+
+    $("regs").innerHTML = model.cards(p, v).map(c => '<div class="reg' + (c[1] !== c[2] ? " changed" : "") + '"><div class="name">' + c[0] + '</div><div class="val mono">' + showVal(c[1], c[2]) + "</div></div>").join("");
+
+    // Flash tablosu
+    let fh = "<tr><th></th><th>" + t("addr") + "</th><th>" + t("bytes") + "</th><th>" + t("label") + "</th><th>" + t("instr") + "</th></tr>";
+    FLASH.forEach((f, k) => {
+      if (f.gap) { fh += '<tr class="gap"><td colspan="5">' + L(f.gap) + "</td></tr>"; return; }
+      const isExec = k === s.row, isPc = k === pcRow;
+      fh += '<tr id="fr' + k + '" class="' + (isExec ? "exec" : "") + '"><td class="badges">' + (isExec ? '<span class="b exec">EXEC</span>' : "") + (isPc ? '<span class="b pc">PC</span>' : "") +
+            "</td><td>" + f.a + "h</td><td>" + f.b.join(" ") + '</td><td class="lbl">' + (f.lab || "") + "</td><td>" + f.asm + "</td></tr>";
+    });
+    $("fTab").innerHTML = fh;
+    if (model.scrollFlash) { const el = $("fr" + (s.row >= 0 ? s.row : pcRow)); if (el) { const w = $("fWrap"); const top = el.offsetTop - w.clientHeight / 2; w.scrollTop = Math.max(0, top); } }
+
+    // RAM
+    const sp = parseInt(v.sp, 16);
+    if (grid) {
+      let rh = "<tr><th></th>" + [...Array(16)].map((_, i) => "<th>" + i.toString(16).toUpperCase() + "</th>").join("") + "</tr>";
+      for (let r = 0; r < 8; r++) {
+        rh += "<tr><th>" + r.toString(16).toUpperCase() + "0</th>";
+        for (let c = 0; c < 16; c++) {
+          const a = r * 16 + c, k = "m" + h2x(a), val = v[k];
+          const cls = [];
+          if (val === "??") cls.push("u");
+          if (a >= v.bank && a < v.bank + 8) cls.push("bk");
+          if (a > v.spBase && a <= sp) cls.push("st");
+          if (p[k] !== val) cls.push("cg");
+          if (a === sp) cls.push("sp");
+          rh += '<td class="' + cls.join(" ") + '" title="' + h2x(a) + 'h">' + val + "</td>";
+        }
+        rh += "</tr>";
+      }
+      $("rTab").innerHTML = rh;
+    } else {
+      let rh = "<tr><th>" + t("addr") + "</th><th>" + t("value") + '</th><th class="colRegion">' + t("region") + "</th><th>" + t("state") + "</th></tr>";
+      model.RAM_ADDRS.forEach(a => {
+        const n = parseInt(a, 16), key = "m" + a;
+        const region = t("bank") + " " + (n < 8 ? "0 · R" + n : "1 · R" + (n - 8));
+        let tag = "";
+        if (n === sp) tag = '<span class="b sp">SP</span>';
+        if (n >= 8 && n <= sp) tag += '<span class="b stack">STACK</span>';
+        else if (n >= 8 && n > sp && v[key] !== "??") tag = '<span class="b stale">OLD</span>';
+        rh += "<tr><td>" + a + "h</td><td" + (n >= 8 && n > sp ? ' class="dimv"' : "") + ">" + showVal(p[key], v[key]) +
+              '</td><td class="reg2 colRegion">' + region + "</td><td>" + tag + "</td></tr>";
+      });
+      $("rTab").innerHTML = rh;
+    }
+
+    // Açıklama
+    if (s.row < 0 || !FLASH[s.row].b) $("opv").innerHTML = '<div class="formula">' + t("noInstr") + "</div>";
+    else {
+      const info = model.opcodeInfo(s.row);
+      $("opv").innerHTML = '<div class="bytes">' + info.bytes.map(b => '<div class="byte"><div class="addr mono">flash[' + b.addr + ']</div><div class="hex mono">' + b.hex +
+        'h <span class="bin">' + bin8(b.hex) + '</span></div><div class="mean">' + L(b.mean) + "</div></div>").join("") + "</div>";
+    }
+    $("ops").innerHTML = s.ops.map(o => "<li>" + L(o) + "</li>").join("");
+    const extra = (s.row >= 0 && FLASH[s.row].b) ? L(model.opcodeInfo(s.row).formula) : "";
+    $("note").innerHTML = escHtml(L(s.n)) + (extra ? '<div class="noteExtra">' + escHtml(extra) + "</div>" : "");
+    $("flow").innerHTML = drawFlow(model, s, v, pcRow);
+    if (chart) chart.update("none");
+    animateStep();
+  }
+
+  // ---------- Zaman çizelgesi (Chart.js): SP ve A'nın adımlara göre değişimi ----------
+  let chart = null;
+  if (window.Chart) {
+    const css = getComputedStyle(document.documentElement), col = n => css.getPropertyValue(n).trim();
+    const spData = STEPS.map((x, i) => ({ x: i, y: parseInt(x.v.sp, 16) })), aData = STEPS.map((x, i) => ({ x: i, y: parseInt(x.v.a, 16) }));
+    const spMax = Math.max(...spData.map(d => d.y)), spMin = Math.min(...spData.map(d => d.y));
+    const tick = { color: col("--muted"), font: { size: 9.5, family: "JetBrains Mono Var, Consolas, monospace" } };
+    const marker = { id: "stepMarker", afterDatasetsDraw(ch) {
+      const x = ch.scales.x.getPixelForValue(cur), { top, bottom } = ch.chartArea, c = ch.ctx;
+      c.save(); c.strokeStyle = col("--pc"); c.lineWidth = 2; c.beginPath(); c.moveTo(x, top); c.lineTo(x, bottom); c.stroke();
+      c.fillStyle = col("--pc"); c.beginPath(); c.arc(x, ch.scales.y.getPixelForValue(spData[cur].y), 3.5, 0, Math.PI * 2); c.fill(); c.restore();
+    } };
+    chart = new Chart($("tl"), {
+      type: "line",
+      data: { datasets: [
+        { label: "SP", data: spData, stepped: true, borderColor: col("--accent"), backgroundColor: col("--accentBg"), fill: "start", yAxisID: "y", pointRadius: 0, borderWidth: 2 },
+        { label: "A", data: aData, stepped: true, borderColor: col("--chg"), borderDash: [4, 3], yAxisID: "y1", pointRadius: 0, borderWidth: 1.5 }
+      ] },
+      options: {
+        animation: false, responsive: true, maintainAspectRatio: false, parsing: true, normalized: true,
+        interaction: { mode: "index", intersect: false },
+        plugins: {
+          legend: { position: "top", align: "end", labels: { boxWidth: 12, boxHeight: 2, color: col("--muted"), font: { size: 10.5 } } },
+          tooltip: { callbacks: { title: it => t("step") + " " + it[0].parsed.x, label: c => c.dataset.label + " = " + h2x(c.parsed.y) + "h" } }
+        },
+        scales: {
+          x: { type: "linear", min: 0, max: Math.max(1, STEPS.length - 1), ticks: { ...tick, precision: 0, maxTicksLimit: 8 }, grid: { display: false }, border: { color: col("--border") } },
+          y: { position: "left", suggestedMin: Math.max(0, spMin - 1), suggestedMax: spMax + 1, ticks: { ...tick, color: col("--accent"), precision: 0, maxTicksLimit: 4, callback: v => h2x(v) + "h" }, grid: { color: col("--border") }, border: { display: false } },
+          y1: { position: "right", min: 0, max: 255, ticks: { ...tick, color: col("--chg"), maxTicksLimit: 3, callback: v => h2x(v) + "h" }, grid: { display: false }, border: { display: false } }
+        },
+        onClick: (e, els, ch) => { const x = Math.round(ch.scales.x.getValueForPixel(e.x)); if (!isNaN(x)) { cur = Math.min(STEPS.length - 1, Math.max(0, x)); render(); } }
+      },
+      plugins: [marker]
+    });
+  }
+
+  // ---------- GSAP: veri paketleri ve değişen register'ların vurgusu ----------
+  function animateStep() {
+    (window.__pktTl || []).forEach(x => x.kill());
+    window.__pktTl = [];
+    if (!(window.gsap && settings.animation)) return;
+    gsap.fromTo("#regs .reg.changed", { scale: 1.08 }, { scale: 1, duration: 0.5, ease: "back.out(2.5)" });
+    const svg = $("flow").querySelector("svg"), NS = "http://www.w3.org/2000/svg";
+    if (!svg || !window.MotionPathPlugin) return;
+    svg.querySelectorAll("path.anim[data-l]").forEach((path, i) => {
+      const l = path.getAttribute("data-l"); if (!l) return;
+      const w = 16 + l.length * 7.4;
+      const g = document.createElementNS(NS, "g");
+      g.setAttribute("class", "pkt");
+      g.innerHTML = '<rect x="' + (-w / 2) + '" y="-10" width="' + w + '" height="20" rx="10" fill="var(--chg)"/><text x="0" y="4" text-anchor="middle" font-size="11.5" font-weight="700" fill="var(--card)">' + escHtml(l) + "</text>";
+      svg.appendChild(g);
+      const tl = gsap.timeline({ repeat: -1, repeatDelay: 0.6, delay: i * 0.3 });
+      // Paket yol boyunca ilerler ve hedefte bekler (etiket her an görünür kalır)
+      tl.fromTo(g, { opacity: 0.35 }, { opacity: 1, duration: 0.2 })
+        .to(g, { duration: 1.1, ease: "power1.inOut", motionPath: { path, align: path, alignOrigin: [0.5, 0.5] } }, 0);
+      window.__pktTl.push(tl);
+    });
+  }
+
+  const go = d => { const n = Math.min(STEPS.length - 1, Math.max(0, cur + d)); if (n !== cur) { cur = n; render(); } };
+  $("bNext").onclick = () => go(1);
+  $("bPrev").onclick = () => go(-1);
+  $("bReset").onclick = () => { cur = 0; render(); };
+  $("bBack").onclick = () => location.hash = "#/";
+  $("bSet").onclick = () => location.hash = "#/settings";
+  if (model.extra) $("bExtra").onclick = model.extra.onClick;
+  activeKeyHandler = e => {
+    if (e.key === "ArrowRight") { e.preventDefault(); go(1); }
+    else if (e.key === "ArrowLeft") { e.preventDefault(); go(-1); }
+    else if (e.key === "Home") { e.preventDefault(); cur = 0; render(); }
+    else if (e.key === "End") { e.preventDefault(); cur = STEPS.length - 1; render(); }
+  };
+  render();
+}
+
+// ---------------------------------------------------------------------
+// Grafiksel veri akışı: Flash | CPU (IR, PC, SP, A, Port) | RAM
+// CPU içindeki transferler, kutuları birbirine bağlayan iç veri yolu üzerinden gösterilir.
+// ---------------------------------------------------------------------
+function drawFlow(model, s, v, pcRow) {
+  const FLASH = model.FLASH;
+  const esc = x => String(x).replace(/</g, "&lt;");
+  const FX = 6, FW = 222, CX = 270, CW = 192, BX = 296, BW = 152, RX = 506, RW = 208;
+  const busX = 282;
+  // Flash satırları (en fazla 14; uzun programlarda işletilen satırın etrafı)
+  let fr = FLASH.map((f, k) => ({ f, k })).filter(x => x.f.a && x.f.b);
+  if (fr.length > 14) {
+    const focus = s.row >= 0 ? s.row : (pcRow ?? 0);
+    const i = Math.max(0, fr.findIndex(x => x.k >= focus));
+    const start = Math.min(Math.max(0, i - 6), fr.length - 14);
+    fr = fr.slice(start, start + 14);
+  }
+  const fIdx = k => fr.findIndex(x => x.k === k);
+  const fY = k => 46 + fIdx(k) * 29 + 12;
+  const ramAddrs = model.flowRam(v, s);
+  const ramY = [50, 98, 146, 194, 242, 352];
+  const rY = a => { const i = ramAddrs.indexOf(a); return i < 0 ? 0 : ramY[i] + 20; };
+  const sp = parseInt(v.sp, 16), spBase = v.spBase ?? 7;
+  const box = { ir: 52, pc: 136, sp: 220, a: 304, p1: 388 };
+  const mid = k => box[k] + 22;
+  // İnce, sabit boyutlu ok başı (çizgi kalınlığından bağımsız)
+  const mk = (id, c) => '<marker id="' + id + '" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M1,1.5 L9,5 L1,8.5 L3.2,5 z" fill="' + c + '" stroke="' + c + '" stroke-width="0.6" stroke-linejoin="round"/></marker>';
+  let g = "<defs>" + mk("mChg", "var(--chg)") + mk("mPc", "var(--pc)") + mk("mSp", "var(--accent)") + "</defs>";
+  const blk = (x, w, title) => '<rect x="' + x + '" y="4" width="' + w + '" height="458" rx="12" fill="var(--soft)" stroke="var(--border)"/><text x="' + (x + w / 2) + '" y="27" text-anchor="middle" font-size="12" font-weight="700" fill="var(--muted)">' + title + "</text>";
+  g += blk(FX, FW, t("flashShort")) + blk(CX, CW, t("cpu")) + blk(RX, RW, t("ramShort"));
+  // İç veri yolu
+  g += '<line x1="' + busX + '" y1="' + mid("ir") + '" x2="' + busX + '" y2="' + mid("p1") + '" stroke="var(--border)" stroke-width="5" stroke-linecap="round"/>';
+  ["ir", "pc", "sp", "a", "p1"].forEach(k => g += '<line x1="' + busX + '" y1="' + mid(k) + '" x2="' + BX + '" y2="' + mid(k) + '" stroke="var(--border)" stroke-width="3"/>');
+  g += '<text x="' + (CX + CW / 2) + '" y="452" text-anchor="middle" font-size="10" fill="var(--muted)">' + t("bus") + "</text>";
+  fr.forEach(x => {
+    const y = fY(x.k) - 12, ex = x.k === s.row, isPc = x.k === pcRow;
+    g += '<rect x="' + (FX + 6) + '" y="' + y + '" width="' + (FW - 12) + '" height="24" rx="5" fill="' + (ex ? "var(--accentBg)" : "var(--card)") + '" stroke="' + (isPc ? "var(--pc)" : "var(--border)") + '" stroke-width="' + (isPc ? 2 : 1) + '"/>' +
+         '<text x="' + (FX + 13) + '" y="' + (y + 16) + '" font-size="11.5" fill="var(--muted)">' + x.f.a + '</text><text x="' + (FX + 56) + '" y="' + (y + 16) + '" font-size="12" fill="' + (ex ? "var(--accent)" : "var(--text)") + '" font-weight="' + (ex ? 700 : 400) + '">' + esc(x.f.asm.length > 18 ? x.f.asm.slice(0, 17) + "…" : x.f.asm) + "</text>";
+  });
+  const port = model.portBox(v);
+  const cb = (key, label, val, hl) => '<rect x="' + BX + '" y="' + box[key] + '" width="' + BW + '" height="44" rx="8" fill="var(--card)" stroke="' + (hl || "var(--border)") + '" stroke-width="' + (hl ? 2 : 1) + '"/>' +
+    '<text x="' + (BX + 11) + '" y="' + (box[key] + 27) + '" font-size="12" fill="var(--muted)" font-weight="700">' + label + '</text><text x="' + (BX + BW - 11) + '" y="' + (box[key] + 28) + '" font-size="15" text-anchor="end" fill="var(--text)" font-weight="700">' + val + "</text>";
+  g += cb("ir", "IR", s.row >= 0 && FLASH[s.row].b ? FLASH[s.row].b.join(" ") : "--") + cb("pc", "PC", v.pch + " " + v.pcl, "var(--pc)") + cb("sp", "SP", v.sp + "h", "var(--accent)") + cb("a", "A", v.a + "h") + cb("p1", port[0], port[1]);
+  ramAddrs.forEach((a, i) => {
+    const y = ramY[i], n = parseInt(a, 16), isSp = n === sp, inStack = n > spBase && n <= sp, val = v["m" + a] ?? "??", stale = n > spBase && n > sp && val !== "??";
+    g += '<rect x="' + (RX + 8) + '" y="' + y + '" width="' + (RW - 16) + '" height="40" rx="7" fill="' + (inStack ? "var(--okBg)" : "var(--card)") + '" stroke="' + (isSp ? "var(--accent)" : "var(--border)") + '" stroke-width="' + (isSp ? 2 : 1) + '"/>' +
+         '<text x="' + (RX + 18) + '" y="' + (y + 25) + '" font-size="12" fill="var(--muted)">' + a + 'h</text><text x="' + (RX + RW - 18) + '" y="' + (y + 26) + '" font-size="15" text-anchor="end" font-weight="700" fill="' + (stale ? "var(--dim)" : "var(--text)") + '">' + val + "</text>";
+  });
+  g += '<text x="' + (RX + RW / 2) + '" y="318" text-anchor="middle" font-size="12" fill="var(--muted)">⋮</text>';
+  const FR = FX + FW, RL = RX + 8, BR = BX + BW;
+  // Sabit işaretçiler: PC → flash, SP → RAM
+  if (pcRow !== undefined && v.pcl !== "--" && fIdx(pcRow) >= 0) {
+    const y = fY(pcRow);
+    g += '<path d="M' + BX + "," + (mid("pc") + 8) + " L" + (busX + 8) + "," + (mid("pc") + 8) + " C" + (FR + 34) + "," + (mid("pc") + 8) + " " + (FR + 26) + "," + y + " " + FR + "," + y + '" fill="none" stroke="var(--pc)" stroke-width="1.6" marker-end="url(#mPc)"/>';
+  }
+  if (rY(v.sp)) g += '<path d="M' + BR + "," + mid("sp") + " C" + (BR + 34) + "," + mid("sp") + " " + (RL - 30) + "," + rY(v.sp) + " " + RL + "," + rY(v.sp) + '" fill="none" stroke="var(--accent)" stroke-width="1.6" marker-end="url(#mSp)"/>';
+  // Bu adımdaki veri hareketleri
+  const flow = (d, lx, ly, l, anchor) => '<path class="anim" data-l="' + esc(l || "") + '" d="' + d + '" fill="none" stroke="var(--chg)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mChg)"/>' +
+    (l ? '<text class="fl" x="' + lx + '" y="' + ly + '" text-anchor="' + (anchor || "middle") + '">' + esc(l) + "</text>" : "");
+  const midX = (FR + busX) / 2, midR = (BR + RL) / 2;
+  const alias = f => ({ irA: { k: "bus", from: "ir", to: "a", l: f.l }, aP1: { k: "bus", from: "a", to: "p1", l: f.l }, irRam: { k: "toRam", from: "ir", row: f.row, l: f.l },
+    push: { k: "toRam", from: "pc", row: f.row, l: f.l }, pop: { k: "fromRam", to: "pc", row: f.row, l: f.l } })[f.k] || f;
+  (s.fx || []).map(alias).forEach(f => {
+    if (f.k === "fetch" && s.row >= 0 && fIdx(s.row) >= 0) {
+      const y = fY(s.row), ty = box.ir + 12;
+      g += flow("M" + FR + "," + y + " C" + (FR + 40) + "," + y + " " + (BX - 40) + "," + ty + " " + BX + "," + ty, midX, Math.min(y, ty) - 8, FLASH[s.row].b.join(" "));
+    }
+    if (f.k === "pcSet") g += flow("M" + (BX + 76) + "," + (box.ir + 44) + " L" + (BX + 76) + "," + box.pc, BX + 84, box.ir + 70, f.l, "start");
+    if (f.k === "bus" && box[f.from] !== undefined && box[f.to] !== undefined && f.from !== f.to) {
+      const y1 = mid(f.from), y2 = mid(f.to);
+      g += flow("M" + BX + "," + y1 + " L" + busX + "," + y1 + " L" + busX + "," + y2 + " L" + BX + "," + y2, BX + BW / 2, box[f.to] - 8, f.l);
+    }
+    if (f.k === "toRam" && rY(f.row)) {
+      const y1 = mid(f.from), y2 = rY(f.row);
+      g += flow("M" + BR + "," + y1 + " C" + (BR + 34) + "," + y1 + " " + (RL - 34) + "," + y2 + " " + RL + "," + y2, midR, Math.min(y1, y2) - 8, f.l);
+    }
+    if (f.k === "fromRam" && rY(f.row)) {
+      const y1 = rY(f.row), y2 = mid(f.to);
+      g += flow("M" + RL + "," + y1 + " C" + (RL - 34) + "," + y1 + " " + (BR + 34) + "," + y2 + " " + BR + "," + y2, midR, Math.min(y1, y2) - 8, f.l);
+    }
+  });
+  return '<svg class="flowSvg" viewBox="0 0 720 466" preserveAspectRatio="xMidYMid meet" role="img" aria-label="data flow">' + g + "</svg>";
+}
+
+// =====================================================================
+// SİMÜLASYON 1: ACALL / LCALL / RET (yerleşik, açıklamaları elle yazılmış örnek)
+// =====================================================================
+function buildCallStackModel() {
+  const hex2 = n => n.toString(16).toUpperCase().padStart(2, "0");
+  const bin8 = h => parseInt(h, 16).toString(2).padStart(8, "0").replace(/(\d{4})(\d{4})/, "$1 $2");
+  const splitPc = v => ({ pch: v.slice(0, 2), pcl: v.slice(2) });
+  const T2 = (en, tr) => ({ en, tr });
+
+  // Flash içeriği
+  const FLASH = [
+    { a: "0000", b: ["02","00","30"], lab: "",        asm: "LJMP Main",     op: "ljmp" },
+    { gap: T2("0003h–002Fh: interrupt vectors (INT0, T0, INT1, T1, serial)", "0003h–002Fh: kesme vektörleri (INT0, T0, INT1, T1, seri port)") },
+    { a: "0030", b: ["74","05"],      lab: "Main:",   asm: "MOV A,#05h",    op: "movAimm" },
+    { a: "0032", b: ["11","40"],      lab: "",        asm: "ACALL AddSub",  op: "acall" },
+    { a: "0034", b: ["00"],           lab: "",        asm: "NOP",           op: "nop" },
+    { a: "0035", b: ["78","10"],      lab: "",        asm: "MOV R0,#10h",   op: "movR0imm" },
+    { a: "0037", b: ["12","09","00"], lab: "",        asm: "LCALL FarSub",  op: "lcall" },
+    { a: "003A", b: ["80","FE"],      lab: "",        asm: "SJMP $",        op: "sjmp" },
+    { gap: T2("003Ch–003Fh: unused", "003Ch–003Fh: boş") },
+    { a: "0040", b: ["24","03"],      lab: "AddSub:", asm: "ADD A,#03h",    op: "addAimm" },
+    { a: "0042", b: ["00"],           lab: "",        asm: "NOP",           op: "nop" },
+    { a: "0043", b: ["12","09","00"], lab: "",        asm: "LCALL FarSub",  op: "lcall" },
+    { a: "0046", b: ["22"],           lab: "",        asm: "RET",           op: "ret" },
+    { gap: T2("0047h–08FFh: other code / unused (second 2 KB block starts at 0800h)", "0047h–08FFh: diğer kod / boş (ikinci 2 KB blok 0800h'de başlar)") },
+    { a: "0900", b: ["F5","90"],      lab: "FarSub:", asm: "MOV P1,A",      op: "movP1A" },
+    { a: "0902", b: ["00"],           lab: "",        asm: "NOP",           op: "nop" },
+    { a: "0903", b: ["22"],           lab: "",        asm: "RET",           op: "ret" }
+  ];
+  const ROW = {};
+  FLASH.forEach((f, k) => { if (f.a) ROW[f.a] = k; });
+
+  // Opcode açılımı
+  function opcodeInfo(row) {
+    const f = FLASH[row], addr = parseInt(f.a, 16);
+    const bx = (i, mean) => ({ addr: hex2((addr + i) >> 8) + hex2((addr + i) & 0xff) + "h", hex: f.b[i], mean: L(mean) });
+    switch (f.op) {
+      case "ljmp": return { bytes: [bx(0, T2("Opcode: LJMP addr16", "Opcode: LJMP addr16")), bx(1, T2("Target address high byte = " + f.b[1] + "h", "Hedef adresin yüksek byte'ı = " + f.b[1] + "h")), bx(2, T2("Target address low byte = " + f.b[2] + "h → " + f.b[1] + f.b[2] + "h", "Hedef adresin düşük byte'ı = " + f.b[2] + "h → " + f.b[1] + f.b[2] + "h"))],
+        formula: L(T2("3 bytes · Target = 00h:30h = 0030h · PC ← 0030h (no return address saved)", "3 byte · Hedef = 00h:30h = 0030h · PC ← 0030h (dönüş adresi saklanmaz)")) };
+      case "movAimm": return { bytes: [bx(0, T2("Opcode: MOV A,#data", "Opcode: MOV A,#data")), bx(1, T2("Immediate data = 05h", "Anlık veri = 05h"))], formula: L(T2("2 bytes · A ← #05h", "2 byte · A ← #05h")) };
+      case "addAimm": return { bytes: [bx(0, T2("Opcode: ADD A,#data", "Opcode: ADD A,#data")), bx(1, T2("Immediate data = 03h", "Anlık veri = 03h"))], formula: L(T2("2 bytes · A ← A + #03h", "2 byte · A ← A + #03h")) };
+      case "movR0imm": return { bytes: [bx(0, T2("Opcode: MOV Rn,#data → 0111 1rrr, rrr = 000 → R0", "Opcode: MOV Rn,#data → 0111 1rrr, rrr = 000 → R0")), bx(1, T2("Immediate data = 10h", "Anlık veri = 10h"))],
+        formula: L(T2("2 bytes · R0 ← #10h · Bank 0 is selected, so R0 = RAM[00h]", "2 byte · R0 ← #10h · Bank 0 seçili, yani R0 = RAM[00h]")) };
+      case "movP1A": return { bytes: [bx(0, T2("Opcode: MOV direct,A", "Opcode: MOV direct,A")), bx(1, T2("Direct address 90h = P1 (SFR)", "Direct adres 90h = P1 (SFR)"))], formula: L(T2("2 bytes · SFR[90h] ← A, i.e. P1 ← A", "2 byte · SFR[90h] ← A, yani P1 ← A")) };
+      case "nop": return { bytes: [bx(0, T2("Opcode: NOP", "Opcode: NOP"))], formula: L(T2("1 byte · Does nothing for 1 machine cycle · PC ← PC + 1", "1 byte · 1 makine çevrimi boyunca hiçbir şey yapmaz · PC ← PC + 1")) };
+      case "ret": return { bytes: [bx(0, T2("Opcode: RET", "Opcode: RET"))], formula: L(T2("1 byte · PCH ← (SP), SP ← SP−1 · PCL ← (SP), SP ← SP−1", "1 byte · PCH ← (SP), SP ← SP−1 · PCL ← (SP), SP ← SP−1")) };
+      case "acall": {
+        const hi3 = parseInt(f.b[0], 16) >> 5, b3 = hi3.toString(2).padStart(3, "0");
+        const target = ((addr + 2) & 0xF800) | (hi3 << 8) | parseInt(f.b[1], 16);
+        const tg = hex2(target >> 8) + hex2(target & 0xff) + "h";
+        return { bytes: [bx(0, T2("a10 a9 a8 = " + b3 + " · 1 0001 = ACALL opcode", "a10 a9 a8 = " + b3 + " · 1 0001 = ACALL opcode")), bx(1, T2("a7…a0 = " + f.b[1] + "h", "a7…a0 = " + f.b[1] + "h"))],
+          formula: L(T2("2 bytes · 11-bit address = " + b3 + " " + bin8(f.b[1]) + " · Target = upper 5 bits of (PC+2) + 11 bits = " + tg + " · Only within the same 2 KB block",
+                        "2 byte · 11 bit adres = " + b3 + " " + bin8(f.b[1]) + " · Hedef = (PC+2)'nin üst 5 biti + 11 bit = " + tg + " · Sadece aynı 2 KB blok içinde")) };
+      }
+      case "lcall": return { bytes: [bx(0, T2("Opcode: LCALL addr16", "Opcode: LCALL addr16")), bx(1, T2("Target address high byte = " + f.b[1] + "h", "Hedef adresin yüksek byte'ı = " + f.b[1] + "h")), bx(2, T2("Target address low byte = " + f.b[2] + "h → " + f.b[1] + f.b[2] + "h", "Hedef adresin düşük byte'ı = " + f.b[2] + "h → " + f.b[1] + f.b[2] + "h"))],
+        formula: L(T2("3 bytes · Target = 09h:00h = 0900h · Anywhere in 64 KB", "3 byte · Hedef = 09h:00h = 0900h · 64 KB'ın herhangi bir yeri")) };
+      case "sjmp": return { bytes: [bx(0, T2("Opcode: SJMP rel", "Opcode: SJMP rel")), bx(1, T2("rel = FEh = −2 (signed)", "rel = FEh = −2 (işaretli)"))],
+        formula: L(T2("2 bytes · Target = (PC+2) + rel = 003Ch − 2 = 003Ah · Jumps to itself: endless loop", "2 byte · Hedef = (PC+2) + rel = 003Ch − 2 = 003Ah · Kendine atlar: sonsuz döngü")) };
+    }
+  }
+
+  // CALL mikro adımları
+  function callSteps(row, name, len, at, ret, tgt, sp0) {
+    const s1 = hex2(parseInt(sp0, 16) + 1), s2 = hex2(parseInt(sp0, 16) + 2), r = splitPc(ret);
+    const range = len === 2
+      ? T2("ACALL encodes the target in 11 bits, so it can only jump within the same 2 KB block.", "ACALL hedefi 11 bitle kodlar, bu yüzden sadece aynı 2 KB blok içine atlayabilir.")
+      : T2("LCALL encodes a full 16-bit target, so it can reach anywhere in the 64 KB program memory.", "LCALL hedefi 16 bitle kodlar, 64 KB program belleğinin herhangi bir yerine atlayabilir.");
+    return [
+      { row, t: name, sub: T2("Micro-step 1/4 · Compute the return address", "Mikro adım 1/4 · Dönüş adresinin hesaplanması"), d: { ...r }, fx: [{ k: "fetch" }, { k: "pcSet", l: "PC + " + len }],
+        ops: [T2("Fetch the instruction's " + len + " bytes from flash", "Komutun " + len + " byte'ı flash'tan okunur"), T2("PC ← " + at + "h + " + len + " = " + ret + "h", "PC ← " + at + "h + " + len + " = " + ret + "h")],
+        n: T2("Fetching always advances PC by the instruction length, so PC now holds " + ret + "h — the instruction right after the CALL. That is exactly the return address. No jump has happened yet.",
+              "Komut okunurken PC her zaman komut uzunluğu kadar artar. PC şu an " + ret + "h, yani CALL'dan sonraki komut: bu tam olarak dönüş adresidir. Henüz atlama yapılmadı.") },
+      { row, t: name, sub: T2("Micro-step 2/4 · Push PCL", "Mikro adım 2/4 · PCL stack'e yazılıyor"), d: { sp: s1, ["m" + s1]: r.pcl }, fx: [{ k: "push", row: s1, l: "PCL " + r.pcl + "h" }],
+        ops: [T2("SP ← " + sp0 + "h + 1 = " + s1 + "h", "SP ← " + sp0 + "h + 1 = " + s1 + "h"), T2("RAM[" + s1 + "h] ← PCL = " + r.pcl + "h", "RAM[" + s1 + "h] ← PCL = " + r.pcl + "h")],
+        n: T2("The low byte goes first. A RAM cell holds 1 byte but PC is 2 bytes, so the return address is split across two cells.",
+              "Önce düşük byte yazılır. RAM hücresi 1 byte, PC ise 2 byte olduğu için dönüş adresi iki hücreye bölünür.") },
+      { row, t: name, sub: T2("Micro-step 3/4 · Push PCH", "Mikro adım 3/4 · PCH stack'e yazılıyor"), d: { sp: s2, ["m" + s2]: r.pch }, fx: [{ k: "push", row: s2, l: "PCH " + r.pch + "h" }],
+        ops: [T2("SP ← " + s1 + "h + 1 = " + s2 + "h", "SP ← " + s1 + "h + 1 = " + s2 + "h"), T2("RAM[" + s2 + "h] ← PCH = " + r.pch + "h", "RAM[" + s2 + "h] ← PCH = " + r.pch + "h")],
+        n: T2("Return address " + ret + "h is now on the stack: " + s1 + "h holds PCL (" + r.pcl + "h), " + s2 + "h holds PCH (" + r.pch + "h). SP points to the last byte written.",
+              "Dönüş adresi " + ret + "h artık stack'te: " + s1 + "h'de PCL (" + r.pcl + "h), " + s2 + "h'de PCH (" + r.pch + "h). SP son yazılan byte'ı gösteriyor.") },
+      { row, t: name, sub: T2("Micro-step 4/4 · Jump to the subroutine", "Mikro adım 4/4 · Alt programa atlama"), d: { ...splitPc(tgt) }, fx: [{ k: "pcSet", l: "PC ← " + tgt + "h" }],
+        ops: [T2("PC ← " + tgt + "h", "PC ← " + tgt + "h")], n: range }
+    ];
+  }
+
+  // RET mikro adımları
+  function retSteps(row, at, sp0, vh, vl) {
+    const s1 = hex2(parseInt(sp0, 16) - 1), s2 = hex2(parseInt(sp0, 16) - 2);
+    const name = T2("RET at " + at + "h", at + "h'deki RET");
+    return [
+      { row, t: name, sub: T2("Micro-step 1/2 · Pop PCH", "Mikro adım 1/2 · PCH stack'ten okunuyor"), d: { pch: vh, pcl: "--", sp: s1 }, fx: [{ k: "fetch" }, { k: "pop", row: sp0, l: "PCH " + vh + "h" }],
+        ops: [T2("PCH ← RAM[" + sp0 + "h] = " + vh + "h", "PCH ← RAM[" + sp0 + "h] = " + vh + "h"), T2("SP ← " + sp0 + "h − 1 = " + s1 + "h", "SP ← " + sp0 + "h − 1 = " + s1 + "h")],
+        n: T2("RET reverses the CALL: the last byte written (PCH) is read first. PCL is not loaded yet (--).",
+              "RET, CALL'ın tersini yapar: en son yazılan byte (PCH) ilk okunur. PCL henüz yüklenmedi (--).") },
+      { row, t: name, sub: T2("Micro-step 2/2 · Pop PCL", "Mikro adım 2/2 · PCL stack'ten okunuyor"), d: { pcl: vl, sp: s2 }, fx: [{ k: "pop", row: s1, l: "PCL " + vl + "h" }],
+        ops: [T2("PCL ← RAM[" + s1 + "h] = " + vl + "h", "PCL ← RAM[" + s1 + "h] = " + vl + "h"), T2("SP ← " + s1 + "h − 1 = " + s2 + "h", "SP ← " + s1 + "h − 1 = " + s2 + "h"), T2("PC = " + vh + vl + "h", "PC = " + vh + vl + "h")],
+        n: T2("Return complete. The RAM cells were NOT erased — only SP moved down. Those cells now hold stale data.",
+              "Dönüş tamamlandı. RAM'deki değerler SİLİNMEDİ, sadece SP aşağı indi. O hücreler artık eski veri tutuyor.") }
+    ];
+  }
+
+  const one = (row, en, tr, sub, d, ops, n, fx) => ({ row, t: T2(en, tr), sub, d, ops, n, fx });
+  const F_ = (pc, extra) => [{ k: "fetch" }, { k: "pcSet", l: pc }].concat(extra || []);
+  const DEFS = [
+    { row: -1, t: T2("Reset", "Reset"), sub: T2("Power-on / reset state", "Güç verme / reset durumu"), d: {},
+      ops: [T2("PC = 0000h (reset vector)", "PC = 0000h (reset vektörü)"), T2("SP = 07h (reset value)", "SP = 07h (reset değeri)"), T2("A = 00h, P1 = FFh (reset values)", "A = 00h, P1 = FFh (reset değerleri)")],
+      n: T2("The CPU always starts at 0000h. Interrupt vectors begin at 0003h, so only a jump to the main program fits at 0000h. RAM contents are undefined (??).",
+            "İşlemci her zaman 0000h'den başlar. Kesme vektörleri 0003h'de başladığı için 0000h'ye sadece ana programa atlayan bir komut sığar. RAM içeriği belirsiz (??).") , fx: [] },
+    one(ROW["0000"], "LJMP Main", "LJMP Main", T2("3 bytes", "3 byte"), splitPc("0030"),
+      [T2("Fetch 02h 00h 30h from flash", "Flash'tan 02h 00h 30h okunur"), T2("PC ← 0030h", "PC ← 0030h")],
+      T2("A JMP does not save a return address: SP and RAM are untouched. That is the key difference between JMP and CALL.", "JMP dönüş adresi saklamaz: SP ve RAM değişmez. CALL ile JMP arasındaki temel fark budur."), F_("PC ← 0030h")),
+    one(ROW["0030"], "MOV A,#05h", "MOV A,#05h", T2("2 bytes", "2 byte"), { ...splitPc("0032"), a: "05" },
+      [T2("PC ← 0030h + 2 = 0032h", "PC ← 0030h + 2 = 0032h"), T2("A ← 05h", "A ← 05h")],
+      T2("An ordinary instruction: PC advances by the instruction length and the stack is not involved.", "Sıradan bir komut: PC komut uzunluğu kadar artar, stack'e dokunulmaz."), F_("PC + 2", [{ k: "irA", l: "05h" }])),
+    ...callSteps(ROW["0032"], T2("ACALL AddSub", "ACALL AddSub"), 2, "0032", "0034", "0040", "07"),
+    one(ROW["0040"], "ADD A,#03h", "ADD A,#03h", T2("2 bytes · inside AddSub", "2 byte · AddSub içinde"), { ...splitPc("0042"), a: "08" },
+      [T2("A ← 05h + 03h = 08h", "A ← 05h + 03h = 08h"), T2("PC ← 0040h + 2 = 0042h", "PC ← 0040h + 2 = 0042h")],
+      T2("We are inside AddSub. One return address (2 bytes) is on the stack: SP = 09h.", "AddSub alt programındayız. Stack'te 1 dönüş adresi (2 byte) var: SP = 09h."), F_("PC + 2", [{ k: "irA", l: "A + 03h" }])),
+    one(ROW["0042"], "NOP", "NOP", T2("1 byte", "1 byte"), splitPc("0043"),
+      [T2("No operation", "Hiçbir işlem yapılmaz"), T2("PC ← 0042h + 1 = 0043h", "PC ← 0042h + 1 = 0043h")],
+      T2("NOP only advances PC by 1 and waits one machine cycle.", "NOP sadece PC'yi 1 artırır ve 1 makine çevrimi bekler."), F_("PC + 1")),
+    ...callSteps(ROW["0043"], T2("LCALL FarSub (nested)", "LCALL FarSub (iç içe)"), 3, "0043", "0046", "0900", "09"),
+    one(ROW["0900"], "MOV P1,A", "MOV P1,A", T2("2 bytes · inside FarSub", "2 byte · FarSub içinde"), { ...splitPc("0902"), p1: "08" },
+      [T2("P1 ← A = 08h", "P1 ← A = 08h"), T2("PC ← 0900h + 2 = 0902h", "PC ← 0900h + 2 = 0902h")],
+      T2("Innermost subroutine. Two return addresses (4 bytes) are stacked: SP = 0Bh.", "En içteki alt program. Stack'te 2 dönüş adresi (4 byte) üst üste: SP = 0Bh."), F_("PC + 2", [{ k: "aP1", l: "08h" }])),
+    one(ROW["0902"], "NOP", "NOP", T2("1 byte", "1 byte"), splitPc("0903"),
+      [T2("PC ← 0902h + 1 = 0903h", "PC ← 0902h + 1 = 0903h")], T2("Only PC changed.", "Sadece PC değişti."), F_("PC + 1")),
+    ...retSteps(ROW["0903"], "0903", "0B", "00", "46"),
+    ...retSteps(ROW["0046"], "0046", "09", "00", "34"),
+    one(ROW["0034"], "NOP", "NOP", T2("1 byte · first instruction between ACALL and LCALL", "1 byte · ACALL ile LCALL arasındaki ilk komut"), splitPc("0035"),
+      [T2("PC ← 0034h + 1 = 0035h", "PC ← 0034h + 1 = 0035h")],
+      T2("Back in the main program. The stack is empty (SP = 07h) but stale values remain in 08h–0Bh.", "Ana programa dönüldü. Stack boş (SP = 07h) ama 08h–0Bh'de eski değerler duruyor."), F_("PC + 1")),
+    one(ROW["0035"], "MOV R0,#10h", "MOV R0,#10h", T2("2 bytes", "2 byte"), { ...splitPc("0037"), m00: "10" },
+      [T2("RAM[00h] ← 10h", "RAM[00h] ← 10h"), T2("PC ← 0035h + 2 = 0037h", "PC ← 0035h + 2 = 0037h")],
+      T2("R0 is really RAM address 00h (Bank 0). If Bank 1 were selected, R0 would be 08h and this write would destroy a return address on the stack.",
+         "R0 aslında RAM'in 00h adresidir (Bank 0). Bank 1 seçili olsaydı R0 = 08h olurdu ve bu yazma stack'teki dönüş adresini bozardı."), F_("PC + 2", [{ k: "irRam", row: "00", l: "10h" }])),
+    ...callSteps(ROW["0037"], T2("LCALL FarSub (from main)", "LCALL FarSub (ana programdan)"), 3, "0037", "003A", "0900", "07"),
+    one(ROW["0900"], "MOV P1,A", "MOV P1,A", T2("2 bytes", "2 byte"), splitPc("0902"),
+      [T2("P1 ← A = 08h (already 08h, no visible change)", "P1 ← A = 08h (zaten 08h, görünür değişim yok)"), T2("PC ← 0902h", "PC ← 0902h")],
+      T2("46h/00h are still sitting in 0Ah/0Bh, but with SP = 09h they are no longer part of the stack.", "0Ah/0Bh'deki 46h/00h hâlâ duruyor ama SP = 09h olduğu için stack'in parçası değil."), F_("PC + 2", [{ k: "aP1", l: "08h" }])),
+    one(ROW["0902"], "NOP", "NOP", T2("1 byte", "1 byte"), splitPc("0903"),
+      [T2("PC ← 0903h", "PC ← 0903h")], T2("Same subroutine, called from a different place this time.", "Aynı alt program, bu sefer farklı bir yerden çağrıldı."), F_("PC + 1")),
+    ...retSteps(ROW["0903"], "0903", "09", "00", "3A"),
+    one(ROW["003A"], "SJMP $", "SJMP $", T2("2 bytes · endless loop", "2 byte · sonsuz döngü"), {},
+      [T2("Target = 003Ch + (−2) = 003Ah", "Hedef = 003Ch + (−2) = 003Ah"), T2("PC stays at 003Ah", "PC 003Ah'de kalır")],
+      T2("The same RET (0903h) returned to 0046h the first time and to 003Ah the second time: the return address lives on the stack, not in the code. Not a single flash byte changed.",
+         "Aynı RET (0903h) ilk seferde 0046h'ye, ikincisinde 003Ah'ye döndü: dönüş adresi kodda değil, stack'te yazılı. Flash'ta tek bir byte bile değişmedi."), F_("PC ← 003Ah"))
+  ];
+
+  // Durumları oluştur
+  const RAM_ADDRS = [];
+  for (let i = 0x0F; i >= 0; i--) RAM_ADDRS.push(hex2(i));
+  let st = { pch: "00", pcl: "00", sp: "07", a: "00", p1: "FF" };
+  RAM_ADDRS.forEach(a => st["m" + a] = "??");
+  const STEPS = DEFS.map(s => { st = { ...st, ...s.d }; return { ...s, v: { ...st } }; });
+  const sim = SIMULATIONS.find(s => s.id === "call-stack");
+
+  return {
+    id: "call-stack", title: sim.title, FLASH, ROW, STEPS, RAM_ADDRS, ramMode: "table",
+    opcodeInfo,
+    cards: (p, v) => {
+      const pk = v.pcl !== "--", po = p.pcl === "--" ? p.pch + "--" : p.pch + p.pcl;
+      return [[t("pch"), p.pch, v.pch], [t("pcl"), p.pcl, v.pcl], [t("pc16"), po + "h", (pk ? v.pch + v.pcl : v.pch + "--") + "h"],
+              [t("sp8"), p.sp + "h", v.sp + "h"], [t("acc"), p.a + "h", v.a + "h"], [t("p1"), p.p1 + "h", v.p1 + "h"]];
+    },
+    flowRam: () => ["0B", "0A", "09", "08", "07", "00"],
+    portBox: v => ["P1", v.p1 + "h"]
+  };
+}
+
+// =====================================================================
+// CODE LAB: editör + kendi programını simüle etme
+// =====================================================================
+// =====================================================================
+// 8051 ASSEMBLER + EMÜLATÖR (Code Lab)
+// =====================================================================
+const A51 = (() => {
+  const h2 = n => (n & 255).toString(16).toUpperCase().padStart(2, "0");
+  const h4 = n => (n & 0xFFFF).toString(16).toUpperCase().padStart(4, "0");
+  const T2 = (en, tr) => ({ en, tr });
+
+  // SFR ve bit isimleri
+  const SFR = { ACC: 0xE0, B: 0xF0, PSW: 0xD0, SP: 0x81, DPL: 0x82, DPH: 0x83, P0: 0x80, P1: 0x90, P2: 0xA0, P3: 0xB0,
+    IE: 0xA8, IP: 0xB8, TMOD: 0x89, TCON: 0x88, TH0: 0x8C, TL0: 0x8A, TH1: 0x8D, TL1: 0x8B, SCON: 0x98, SBUF: 0x99, PCON: 0x87 };
+  const SFR_NAME = {}; Object.keys(SFR).forEach(k => SFR_NAME[SFR[k]] = k === "ACC" ? "A" : k);
+  const BITS = { CY: 0xD7, AC: 0xD6, F0: 0xD5, RS1: 0xD4, RS0: 0xD3, OV: 0xD2, EA: 0xAF, ES: 0xAC, ET1: 0xAB, EX1: 0xAA, ET0: 0xA9, EX0: 0xA8,
+    TF1: 0x8F, TR1: 0x8E, TF0: 0x8D, TR0: 0x8C, IE1: 0x8B, IT1: 0x8A, IE0: 0x89, IT0: 0x88, RI: 0x98, TI: 0x99 };
+  const PORTS = { 0x80: "P0", 0x90: "P1", 0xA0: "P2", 0xB0: "P3" };
+
+  // ---------- Komut tablosu: [biçim, opcode, çalıştırma fonksiyonu] ----------
+  // Operand rolleri: A AB C DPTR @A+DPTR Rn @Ri #imm #imm16 dir bit rel a11 a16
+  const F = [];
+  const def = (spec, op, ex) => F.push({ spec, op, ex });
+
+  // Yardımcı işlemler (c = CPU durumu)
+  const A = c => c.sfr[0xE0];
+  const setA = (c, v) => wr(c, 0xE0, v);
+  const bankBase = c => ((c.sfr[0xD0] >> 3) & 3) * 8;
+  const rAddr = (c, n) => bankBase(c) + n;
+  const rd = (c, a) => { if (a < 0x80) { c.reads.push(a); return c.ram[a]; } return c.sfr[a] ?? 0; };
+  const wr = (c, a, v) => { v &= 255; if (a < 0x80) { c.ram[a] = v; c.log.push({ t: "ram", a, v }); } else { c.sfr[a] = v; c.log.push({ t: "sfr", a, v }); if (a === 0x81 && !c.internalSp) c.spBase = v; } };
+  const rdInd = (c, i) => { const a = c.ram[rAddr(c, i)]; c.reads.push(a); return c.ram[a]; };
+  const wrInd = (c, i, v) => { const a = c.ram[rAddr(c, i)]; c.ram[a] = v & 255; c.log.push({ t: "ram", a, v: v & 255 }); };
+  const bitLoc = b => b < 0x80 ? [0x20 + (b >> 3), b & 7] : [b & 0xF8, b & 7];
+  const rdBit = (c, b) => { const [a, n] = bitLoc(b); return (rd(c, a) >> n) & 1; };
+  const wrBit = (c, b, v) => { const [a, n] = bitLoc(b); const cur = a < 0x80 ? c.ram[a] : (c.sfr[a] ?? 0); wr(c, a, v ? cur | (1 << n) : cur & ~(1 << n)); };
+  const CY = c => (c.sfr[0xD0] >> 7) & 1;
+  const setPsw = (c, bit, v) => { const p = c.sfr[0xD0]; c.sfr[0xD0] = v ? p | (1 << bit) : p & ~(1 << bit); c.pswChanged = true; };
+  const setCY = (c, v) => setPsw(c, 7, v);
+  const push = (c, v) => { c.internalSp = true; const s = (c.sfr[0x81] + 1) & 255; wr(c, 0x81, s); c.ram[s] = v & 255; c.log.push({ t: "ram", a: s, v: v & 255 }); c.internalSp = false; };
+  const pop = c => { c.internalSp = true; const s = c.sfr[0x81]; c.reads.push(s); const v = c.ram[s]; wr(c, 0x81, (s - 1) & 255); c.internalSp = false; return v; };
+  const add = (c, v, cy) => { const a = A(c), r = a + v + cy; setCY(c, r > 255); setPsw(c, 6, ((a & 15) + (v & 15) + cy) > 15); setPsw(c, 2, ((a ^ r) & (v ^ r) & 0x80) !== 0); setA(c, r); };
+  const subb = (c, v) => { const a = A(c), cy = CY(c), r = a - v - cy; setCY(c, r < 0); setPsw(c, 6, ((a & 15) - (v & 15) - cy) < 0); setPsw(c, 2, ((a ^ v) & (a ^ r) & 0x80) !== 0); setA(c, r); };
+  const jmp = (c, t) => { c.pc = t; };
+  const cjne = (c, x, y, t) => { setCY(c, x < y); if (x !== y) jmp(c, t); c.cond = x !== y; };
+
+  // Veri transferi
+  def("MOV A,#imm", 0x74, (c, o) => setA(c, o.imm));
+  def("MOV A,Rn", 0xE8, (c, o) => setA(c, rd(c, rAddr(c, o.n))));
+  def("MOV A,@Ri", 0xE6, (c, o) => setA(c, rdInd(c, o.i)));
+  def("MOV A,dir", 0xE5, (c, o) => setA(c, rd(c, o.dir)));
+  def("MOV Rn,#imm", 0x78, (c, o) => wr(c, rAddr(c, o.n), o.imm));
+  def("MOV Rn,A", 0xF8, (c, o) => wr(c, rAddr(c, o.n), A(c)));
+  def("MOV Rn,dir", 0xA8, (c, o) => wr(c, rAddr(c, o.n), rd(c, o.dir)));
+  def("MOV dir,A", 0xF5, (c, o) => wr(c, o.dir, A(c)));
+  def("MOV dir,#imm", 0x75, (c, o) => wr(c, o.dir, o.imm));
+  def("MOV dir,Rn", 0x88, (c, o) => wr(c, o.dir, rd(c, rAddr(c, o.n))));
+  def("MOV dir,@Ri", 0x86, (c, o) => wr(c, o.dir, rdInd(c, o.i)));
+  def("MOV dir,dir", 0x85, (c, o) => wr(c, o.dir2, rd(c, o.dir)));
+  def("MOV @Ri,A", 0xF6, (c, o) => wrInd(c, o.i, A(c)));
+  def("MOV @Ri,#imm", 0x76, (c, o) => wrInd(c, o.i, o.imm));
+  def("MOV @Ri,dir", 0xA6, (c, o) => wrInd(c, o.i, rd(c, o.dir)));
+  def("MOV DPTR,#imm16", 0x90, (c, o) => { wr(c, 0x83, o.imm16 >> 8); wr(c, 0x82, o.imm16); });
+  def("MOV C,bit", 0xA2, (c, o) => setCY(c, rdBit(c, o.bit)));
+  def("MOV bit,C", 0x92, (c, o) => wrBit(c, o.bit, CY(c)));
+  def("MOVC A,@A+DPTR", 0x93, c => setA(c, c.code[(A(c) + (c.sfr[0x83] << 8 | c.sfr[0x82])) & 0xFFFF] || 0));
+  def("PUSH dir", 0xC0, (c, o) => push(c, rd(c, o.dir)));
+  def("POP dir", 0xD0, (c, o) => wr(c, o.dir, pop(c)));
+  def("XCH A,Rn", 0xC8, (c, o) => { const t = rd(c, rAddr(c, o.n)); wr(c, rAddr(c, o.n), A(c)); setA(c, t); });
+  def("XCH A,dir", 0xC5, (c, o) => { const t = rd(c, o.dir); wr(c, o.dir, A(c)); setA(c, t); });
+  def("XCH A,@Ri", 0xC6, (c, o) => { const t = rdInd(c, o.i); wrInd(c, o.i, A(c)); setA(c, t); });
+  // Aritmetik
+  [["ADD", 0x24, 0], ["ADDC", 0x34, 1]].forEach(([m, b, k]) => {
+    def(m + " A,#imm", b, (c, o) => add(c, o.imm, k ? CY(c) : 0));
+    def(m + " A,dir", b + 1, (c, o) => add(c, rd(c, o.dir), k ? CY(c) : 0));
+    def(m + " A,@Ri", b + 2, (c, o) => add(c, rdInd(c, o.i), k ? CY(c) : 0));
+    def(m + " A,Rn", b + 4, (c, o) => add(c, rd(c, rAddr(c, o.n)), k ? CY(c) : 0));
+  });
+  def("SUBB A,#imm", 0x94, (c, o) => subb(c, o.imm));
+  def("SUBB A,dir", 0x95, (c, o) => subb(c, rd(c, o.dir)));
+  def("SUBB A,@Ri", 0x96, (c, o) => subb(c, rdInd(c, o.i)));
+  def("SUBB A,Rn", 0x98, (c, o) => subb(c, rd(c, rAddr(c, o.n))));
+  def("INC A", 0x04, c => setA(c, A(c) + 1));
+  def("INC Rn", 0x08, (c, o) => wr(c, rAddr(c, o.n), rd(c, rAddr(c, o.n)) + 1));
+  def("INC dir", 0x05, (c, o) => wr(c, o.dir, rd(c, o.dir) + 1));
+  def("INC @Ri", 0x06, (c, o) => wrInd(c, o.i, rdInd(c, o.i) + 1));
+  def("INC DPTR", 0xA3, c => { const d = ((c.sfr[0x83] << 8) | c.sfr[0x82]) + 1; wr(c, 0x83, d >> 8); wr(c, 0x82, d); });
+  def("DEC A", 0x14, c => setA(c, A(c) - 1));
+  def("DEC Rn", 0x18, (c, o) => wr(c, rAddr(c, o.n), rd(c, rAddr(c, o.n)) - 1));
+  def("DEC dir", 0x15, (c, o) => wr(c, o.dir, rd(c, o.dir) - 1));
+  def("DEC @Ri", 0x16, (c, o) => wrInd(c, o.i, rdInd(c, o.i) - 1));
+  def("MUL AB", 0xA4, c => { const r = A(c) * c.sfr[0xF0]; setA(c, r); wr(c, 0xF0, r >> 8); setCY(c, 0); setPsw(c, 2, r > 255); });
+  def("DIV AB", 0x84, c => { const b = c.sfr[0xF0]; setCY(c, 0); if (!b) { setPsw(c, 2, 1); return; } const a = A(c); setA(c, Math.floor(a / b)); wr(c, 0xF0, a % b); setPsw(c, 2, 0); });
+  // Mantık
+  [["ANL", 0x50, (x, y) => x & y], ["ORL", 0x40, (x, y) => x | y], ["XRL", 0x60, (x, y) => x ^ y]].forEach(([m, b, fn]) => {
+    def(m + " A,#imm", b + 4, (c, o) => setA(c, fn(A(c), o.imm)));
+    def(m + " A,dir", b + 5, (c, o) => setA(c, fn(A(c), rd(c, o.dir))));
+    def(m + " A,@Ri", b + 6, (c, o) => setA(c, fn(A(c), rdInd(c, o.i))));
+    def(m + " A,Rn", b + 8, (c, o) => setA(c, fn(A(c), rd(c, rAddr(c, o.n)))));
+    def(m + " dir,A", b + 2, (c, o) => wr(c, o.dir, fn(rd(c, o.dir), A(c))));
+    def(m + " dir,#imm", b + 3, (c, o) => wr(c, o.dir, fn(rd(c, o.dir), o.imm)));
+  });
+  def("CLR A", 0xE4, c => setA(c, 0));
+  def("CPL A", 0xF4, c => setA(c, ~A(c)));
+  def("SWAP A", 0xC4, c => setA(c, ((A(c) << 4) | (A(c) >> 4))));
+  def("RL A", 0x23, c => setA(c, (A(c) << 1) | (A(c) >> 7)));
+  def("RR A", 0x03, c => setA(c, (A(c) >> 1) | (A(c) << 7)));
+  def("RLC A", 0x33, c => { const a = A(c), cy = CY(c); setCY(c, a >> 7); setA(c, (a << 1) | cy); });
+  def("RRC A", 0x13, c => { const a = A(c), cy = CY(c); setCY(c, a & 1); setA(c, (a >> 1) | (cy << 7)); });
+  // Bit işlemleri
+  def("CLR C", 0xC3, c => setCY(c, 0));
+  def("SETB C", 0xD3, c => setCY(c, 1));
+  def("CPL C", 0xB3, c => setCY(c, !CY(c)));
+  def("CLR bit", 0xC2, (c, o) => wrBit(c, o.bit, 0));
+  def("SETB bit", 0xD2, (c, o) => wrBit(c, o.bit, 1));
+  def("CPL bit", 0xB2, (c, o) => wrBit(c, o.bit, !rdBit(c, o.bit)));
+  // Dallanma
+  def("ACALL a11", 0x11, null);
+  def("LCALL a16", 0x12, null);
+  def("RET", 0x22, null);
+  def("RETI", 0x32, null);
+  def("AJMP a11", 0x01, (c, o) => jmp(c, o.addr));
+  def("LJMP a16", 0x02, (c, o) => jmp(c, o.addr));
+  def("SJMP rel", 0x80, (c, o) => jmp(c, o.rel));
+  def("JMP @A+DPTR", 0x73, c => jmp(c, (A(c) + ((c.sfr[0x83] << 8) | c.sfr[0x82])) & 0xFFFF));
+  def("JZ rel", 0x60, (c, o) => { c.cond = A(c) === 0; if (c.cond) jmp(c, o.rel); });
+  def("JNZ rel", 0x70, (c, o) => { c.cond = A(c) !== 0; if (c.cond) jmp(c, o.rel); });
+  def("JC rel", 0x40, (c, o) => { c.cond = !!CY(c); if (c.cond) jmp(c, o.rel); });
+  def("JNC rel", 0x50, (c, o) => { c.cond = !CY(c); if (c.cond) jmp(c, o.rel); });
+  def("JB bit,rel", 0x20, (c, o) => { c.cond = !!rdBit(c, o.bit); if (c.cond) jmp(c, o.rel); });
+  def("JNB bit,rel", 0x30, (c, o) => { c.cond = !rdBit(c, o.bit); if (c.cond) jmp(c, o.rel); });
+  def("CJNE A,#imm,rel", 0xB4, (c, o) => cjne(c, A(c), o.imm, o.rel));
+  def("CJNE A,dir,rel", 0xB5, (c, o) => cjne(c, A(c), rd(c, o.dir), o.rel));
+  def("CJNE Rn,#imm,rel", 0xB8, (c, o) => cjne(c, rd(c, rAddr(c, o.n)), o.imm, o.rel));
+  def("CJNE @Ri,#imm,rel", 0xB6, (c, o) => cjne(c, rdInd(c, o.i), o.imm, o.rel));
+  def("DJNZ Rn,rel", 0xD8, (c, o) => { const v = (rd(c, rAddr(c, o.n)) - 1) & 255; wr(c, rAddr(c, o.n), v); c.cond = v !== 0; if (c.cond) jmp(c, o.rel); });
+  def("DJNZ dir,rel", 0xD5, (c, o) => { const v = (rd(c, o.dir) - 1) & 255; wr(c, o.dir, v); c.cond = v !== 0; if (c.cond) jmp(c, o.rel); });
+  def("NOP", 0x00, () => {});
+
+  // Biçimleri ön işleme
+  F.forEach(f => {
+    const sp = f.spec.indexOf(" ");
+    f.mn = sp < 0 ? f.spec : f.spec.slice(0, sp);
+    f.ops = sp < 0 ? [] : f.spec.slice(sp + 1).split(",");
+    f.len = 1 + f.ops.reduce((s, r) => s + ({ "#imm": 1, "#imm16": 2, dir: 1, bit: 1, rel: 1, a11: 1, a16: 2 }[r] || 0), 0);
+  });
+  const MNEMONICS = [...new Set(F.map(f => f.mn))];
+
+  // ---------- İfade değerlendirme ----------
+  function parseNum(t) {
+    let m;
+    if ((m = t.match(/^0x([0-9a-f]+)$/i))) return parseInt(m[1], 16);
+    if ((m = t.match(/^([0-9][0-9a-f]*)h$/i))) return parseInt(m[1], 16);
+    if ((m = t.match(/^([01]+)b$/i))) return parseInt(m[1], 2);
+    if ((m = t.match(/^(\d+)d?$/i))) return parseInt(m[1], 10);
+    if ((m = t.match(/^'(.)'$/))) return m[1].charCodeAt(0);
+    return null;
+  }
+  function evalExpr(e, ctx) {
+    const s = e.replace(/\s+/g, "");
+    if (!s) throw T2("Missing value", "Değer eksik");
+    const parts = s.match(/[+-]?[^+-]+/g);
+    let total = 0;
+    for (let p of parts) {
+      let sign = 1;
+      if (p[0] === "+" || p[0] === "-") { if (p[0] === "-") sign = -1; p = p.slice(1); }
+      let v = parseNum(p);
+      const U = p.toUpperCase();
+      if (v === null) {
+        if (p === "$") v = ctx.pc;
+        else if (U in ctx.sym) v = ctx.sym[U];
+        else if (U in SFR) v = SFR[U];
+        else if (U in BITS) v = BITS[U];
+        else if (/^[0-9a-f]+h$/i.test(p)) v = parseInt(p.slice(0, -1), 16);
+        else if (ctx.pass === 1 && /^[A-Z_.?][\w.?]*$/i.test(p)) v = 0;
+        else throw T2("Unknown symbol: " + p, "Tanımsız sembol: " + p);
+      }
+      total += sign * v;
+    }
+    return total;
+  }
+  function evalBit(e, ctx) {
+    const m = e.replace(/\s+/g, "").match(/^(.+)\.([0-7])$/);
+    if (m) {
+      const base = evalExpr(m[1], ctx);
+      if (base >= 0x20 && base <= 0x2F) return (base - 0x20) * 8 + +m[2];
+      if (base >= 0x80 && (base & 7) === 0) return base + +m[2];
+      if (ctx.pass === 1) return 0;
+      throw T2("Not bit-addressable: " + m[1], "Bit adreslenemez: " + m[1]);
+    }
+    return evalExpr(e, ctx);
+  }
+
+  // ---------- Operand türü ----------
+  function opKind(tok) {
+    const u = tok.toUpperCase().replace(/\s+/g, "");
+    if (["A", "AB", "C", "DPTR", "@A+DPTR"].includes(u)) return { k: u };
+    let m = u.match(/^R([0-7])$/); if (m) return { k: "Rn", n: +m[1] };
+    m = u.match(/^@R([01])$/); if (m) return { k: "@Ri", i: +m[1] };
+    if (u[0] === "#") return { k: "#", e: tok.trim().slice(1) };
+    return { k: "e", e: tok.trim() };
+  }
+  const fits = (role, ok) => {
+    if (["A", "AB", "C", "DPTR", "@A+DPTR", "Rn", "@Ri"].includes(role)) return ok.k === role;
+    if (role[0] === "#") return ok.k === "#";
+    return ok.k === "e";
+  };
+  function splitOps(s) {
+    const out = []; let cur = "", q = false;
+    for (const ch of s) { if (ch === "'" || ch === '"') q = !q; if (ch === "," && !q) { out.push(cur); cur = ""; } else cur += ch; }
+    if (cur.trim()) out.push(cur);
+    return out.map(x => x.trim());
+  }
+  function stripComment(line) {
+    let q = false;
+    for (let i = 0; i < line.length; i++) { const ch = line[i]; if (ch === "'" || ch === '"') q = !q; if (ch === ";" && !q) return line.slice(0, i); }
+    return line;
+  }
+
+  // ---------- Assembler (iki geçiş) ----------
+  function assemble(src) {
+    const lines = src.replace(/\r/g, "").split("\n");
+    const errors = [];
+    const sym = {};
+    const items = [];
+    const parsed = lines.map((raw, idx) => {
+      let s = stripComment(raw).trim();
+      const r = { line: idx + 1, raw, label: "", mn: "", ops: [], text: "" };
+      if (!s) return r;
+      let m = s.match(/^([A-Za-z_?][\w?]*)\s*:\s*(.*)$/);
+      if (m) { r.label = m[1]; s = m[2].trim(); }
+      m = s.match(/^([A-Za-z_?][\w?]*)\s+EQU\s+(.+)$/i);
+      if (m) { r.equ = [m[1], m[2]]; return r; }
+      if (!s) return r;
+      m = s.match(/^(\S+)\s*(.*)$/);
+      r.mn = m[1].toUpperCase(); r.ops = m[2] ? splitOps(m[2]) : []; r.text = s;
+      if (r.mn === "CALL") r.mn = "LCALL";
+      if (r.mn === "JMP" && !(r.ops[0] && r.ops[0].toUpperCase().replace(/\s/g, "") === "@A+DPTR")) r.mn = "LJMP";
+      return r;
+    });
+    for (let pass = 1; pass <= 2; pass++) {
+      let pc = 0; items.length = 0;
+      for (const r of parsed) {
+        const ctx = { sym, pc, pass };
+        try {
+          if (r.equ) { sym[r.equ[0].toUpperCase()] = evalExpr(r.equ[1], ctx); continue; }
+          if (r.label) {
+            const L = r.label.toUpperCase();
+            if (pass === 1 && L in sym) throw T2("Duplicate label: " + r.label, "Tekrarlanan etiket: " + r.label);
+            sym[L] = pc;
+          }
+          if (!r.mn) { if (r.label && pass === 2) items.push({ addr: pc, label: r.label, line: r.line, len: 0, bytes: [], asm: "", onlyLabel: true }); continue; }
+          if (r.mn === "END") break;
+          if (r.mn === "ORG") { pc = evalExpr(r.ops.join(","), ctx) & 0xFFFF; continue; }
+          if (r.mn === "DB") {
+            const bytes = [];
+            r.ops.forEach(o => { const q = o.match(/^["'](.*)["']$/); if (q && q[1].length > 1) [...q[1]].forEach(ch => bytes.push(ch.charCodeAt(0) & 255)); else bytes.push(evalExpr(o, ctx) & 255); });
+            items.push({ addr: pc, label: r.label, line: r.line, len: bytes.length, bytes, asm: r.text, data: true });
+            pc += bytes.length; continue;
+          }
+          if (!MNEMONICS.includes(r.mn)) throw T2("Unknown or unsupported instruction: " + r.mn, "Bilinmeyen ya da desteklenmeyen komut: " + r.mn);
+          const kinds = r.ops.map(opKind);
+          const form = F.find(f => f.mn === r.mn && f.ops.length === kinds.length && f.ops.every((role, i) => fits(role, kinds[i])));
+          if (!form) throw T2("Invalid operands for " + r.mn, r.mn + " için geçersiz operand");
+          const o = {}; const bytes = [form.op]; const next = pc + form.len; let dirCount = 0;
+          form.ops.forEach((role, i) => {
+            const k = kinds[i];
+            if (role === "Rn") { o.n = k.n; bytes[0] = form.op | k.n; }
+            else if (role === "@Ri") { o.i = k.i; bytes[0] = form.op | k.i; }
+            else if (role === "#imm") { o.imm = evalExpr(k.e, ctx) & 255; bytes.push(o.imm); }
+            else if (role === "#imm16") { o.imm16 = evalExpr(k.e, ctx) & 0xFFFF; bytes.push(o.imm16 >> 8, o.imm16 & 255); }
+            else if (role === "dir") { const v = evalExpr(k.e, ctx); if (pass === 2 && (v < 0 || v > 255)) throw T2("Direct address out of range: " + k.e, "Doğrudan adres aralık dışında: " + k.e); if (dirCount++ === 0) o.dir = v & 255; else o.dir2 = v & 255; bytes.push(v & 255); }
+            else if (role === "bit") { o.bit = evalBit(k.e, ctx) & 255; bytes.push(o.bit); }
+            else if (role === "rel") {
+              const tgt = evalExpr(k.e, ctx); const off = tgt - next;
+              if (pass === 2 && (off < -128 || off > 127)) throw T2("Jump target out of range (−128…+127): " + k.e, "Atlama hedefi menzil dışında (−128…+127): " + k.e);
+              o.rel = tgt & 0xFFFF; o.off = off; bytes.push(off & 255);
+            }
+            else if (role === "a11") {
+              const tgt = evalExpr(k.e, ctx);
+              if (pass === 2 && (tgt & 0xF800) !== (next & 0xF800)) throw T2("ACALL/AJMP target is outside the current 2 KB block: " + k.e, "ACALL/AJMP hedefi aynı 2 KB blokta değil: " + k.e);
+              o.addr = tgt & 0xFFFF; bytes[0] = (((tgt >> 8) & 7) << 5) | form.op; bytes.push(tgt & 255);
+            }
+            else if (role === "a16") { o.addr = evalExpr(k.e, ctx) & 0xFFFF; bytes.push(o.addr >> 8, o.addr & 255); }
+          });
+          // MOV dir,dir: önce kaynak, sonra hedef kodlanır
+          if (form.spec === "MOV dir,dir") { const d = o.dir, s2 = o.dir2; o.dir = s2; o.dir2 = d; bytes[1] = s2; bytes[2] = d; }
+          items.push({ addr: pc, label: r.label, line: r.line, len: form.len, bytes, asm: r.text, form, o });
+          pc += form.len;
+        } catch (err) {
+          if (pass === 2 || err.en) { if (!errors.some(e => e.line === r.line)) errors.push({ line: r.line, msg: err.en ? err : T2(String(err), String(err)) }); }
+        }
+      }
+      if (errors.length && pass === 2) break;
+    }
+    if (!errors.length && !items.some(i => i.form)) errors.push({ line: 1, msg: T2("No instructions found.", "Hiç komut bulunamadı.") });
+    return { errors, items, sym };
+  }
+
+  // ---------- Açıklama metinleri ----------
+  const DESC = {
+    MOV: T2("Copies the source value to the destination. Flags are not affected.", "Kaynaktaki değeri hedefe kopyalar. Bayraklar etkilenmez."),
+    MOVC: T2("Reads a constant byte from program memory (flash) into A.", "Program belleğinden (flash) A'ya sabit bir byte okur."),
+    PUSH: T2("SP is incremented first, then the byte is written to the new stack top.", "Önce SP artırılır, sonra byte yeni stack tepesine yazılır."),
+    POP: T2("The byte at the stack top is read, then SP is decremented.", "Stack tepesindeki byte okunur, sonra SP azaltılır."),
+    XCH: T2("Swaps A with the operand.", "A ile operandın değerlerini takas eder."),
+    ADD: T2("Adds the operand to A. CY, AC and OV are updated.", "Operandı A'ya ekler. CY, AC ve OV güncellenir."),
+    ADDC: T2("Adds the operand and the carry flag to A.", "Operandı ve elde bayrağını (CY) A'ya ekler."),
+    SUBB: T2("Subtracts the operand and the carry flag from A.", "Operandı ve CY'yi A'dan çıkarır."),
+    INC: T2("Increments the operand by 1. Flags are not affected.", "Operandı 1 artırır. Bayraklar etkilenmez."),
+    DEC: T2("Decrements the operand by 1. Flags are not affected.", "Operandı 1 azaltır. Bayraklar etkilenmez."),
+    MUL: T2("A × B: the low byte goes to A, the high byte to B.", "A × B: sonucun düşük byte'ı A'ya, yüksek byte'ı B'ye yazılır."),
+    DIV: T2("A ÷ B: the quotient goes to A, the remainder to B.", "A ÷ B: bölüm A'ya, kalan B'ye yazılır."),
+    ANL: T2("Bitwise AND. Often used to clear selected bits.", "Bit bit VE işlemi. Seçili bitleri sıfırlamak için kullanılır."),
+    ORL: T2("Bitwise OR. Often used to set selected bits.", "Bit bit VEYA işlemi. Seçili bitleri 1 yapmak için kullanılır."),
+    XRL: T2("Bitwise XOR. Often used to toggle selected bits.", "Bit bit ÖZEL VEYA. Seçili bitleri tersine çevirmek için kullanılır."),
+    CLR: T2("Clears the operand to 0.", "Operandı 0 yapar."), SETB: T2("Sets the bit to 1.", "Biti 1 yapar."), CPL: T2("Complements (inverts) the operand.", "Operandı tersler."),
+    SWAP: T2("Swaps the upper and lower nibbles of A.", "A'nın üst ve alt 4 bitini yer değiştirir."),
+    RL: T2("Rotates A one bit to the left.", "A'yı bir bit sola döndürür."), RR: T2("Rotates A one bit to the right.", "A'yı bir bit sağa döndürür."),
+    RLC: T2("Rotates A left through the carry flag.", "A'yı CY üzerinden sola döndürür."), RRC: T2("Rotates A right through the carry flag.", "A'yı CY üzerinden sağa döndürür."),
+    NOP: T2("No operation: only PC advances by 1.", "İşlem yapılmaz: sadece PC 1 artar."),
+    SJMP: T2("Short jump: target = next PC + signed 8-bit offset.", "Kısa atlama: hedef = sonraki PC + işaretli 8 bit ofset."),
+    AJMP: T2("Absolute jump within the same 2 KB block.", "Aynı 2 KB blok içinde mutlak atlama."),
+    LJMP: T2("Long jump anywhere in 64 KB. No return address is saved.", "64 KB içinde herhangi bir yere atlama. Dönüş adresi saklanmaz."),
+    JMP: T2("Indirect jump to A + DPTR.", "A + DPTR adresine dolaylı atlama."),
+    JZ: T2("Jumps if A = 0.", "A = 0 ise atlar."), JNZ: T2("Jumps if A ≠ 0.", "A ≠ 0 ise atlar."),
+    JC: T2("Jumps if CY = 1.", "CY = 1 ise atlar."), JNC: T2("Jumps if CY = 0.", "CY = 0 ise atlar."),
+    JB: T2("Jumps if the bit is 1.", "Bit 1 ise atlar."), JNB: T2("Jumps if the bit is 0.", "Bit 0 ise atlar."),
+    CJNE: T2("Compares and jumps if not equal. CY = 1 if the first operand is smaller.", "Karşılaştırır, eşit değilse atlar. İlk operand küçükse CY = 1 olur."),
+    DJNZ: T2("Decrements the operand and jumps if the result is not zero. Typical loop counter.", "Operandı 1 azaltır, sonuç sıfır değilse atlar. Tipik döngü sayacı."),
+    ACALL: T2("Absolute call within the same 2 KB block: return address is pushed, then PC jumps.", "Aynı 2 KB blok içinde çağrı: dönüş adresi stack'e yazılır, sonra PC atlar."),
+    LCALL: T2("Long call anywhere in 64 KB: return address is pushed, then PC jumps.", "64 KB içinde çağrı: dönüş adresi stack'e yazılır, sonra PC atlar."),
+    RET: T2("Pops the return address (PCH first, then PCL) into PC.", "Dönüş adresini stack'ten PC'ye alır (önce PCH, sonra PCL)."),
+    RETI: T2("Returns from an interrupt routine, like RET.", "Kesme rutininden döner, RET gibi çalışır.")
+  };
+
+  // ---------- Program çalıştırma: adım listesi üretir ----------
+  function run(asmRes, limit) {
+    const code = new Uint8Array(65536);
+    const at = {};
+    asmRes.items.forEach(it => { it.bytes.forEach((b, i) => code[(it.addr + i) & 0xFFFF] = b); if (it.form) at[it.addr] = it; });
+    const c = { pc: 0, ram: new Uint8Array(256), sfr: { 0x81: 7, 0x80: 0xFF, 0x90: 0xFF, 0xA0: 0xFF, 0xB0: 0xFF, 0xE0: 0, 0xF0: 0, 0xD0: 0, 0x82: 0, 0x83: 0 },
+      code, log: [], reads: [], spBase: 7, port: 0x90, internalSp: false };
+    const known = new Uint8Array(256);
+    const steps = [];
+    const snap = over => {
+      // Parite bitini güncelle
+      let a = c.sfr[0xE0], p = 0; while (a) { p ^= a & 1; a >>= 1; } c.sfr[0xD0] = (c.sfr[0xD0] & 0xFE) | p;
+      const v = { pch: h2(c.pc >> 8), pcl: h2(c.pc), sp: h2(c.sfr[0x81]), a: h2(c.sfr[0xE0]), b: h2(c.sfr[0xF0]), psw: h2(c.sfr[0xD0]),
+        dptr: h2(c.sfr[0x83]) + h2(c.sfr[0x82]), cy: String(CY(c)), port: PORTS[c.port], pv: h2(c.sfr[c.port]), spBase: c.spBase, bank: bankBase(c) };
+      for (let i = 0; i < 128; i++) v["m" + h2(i)] = known[i] ? h2(c.ram[i]) : "??";
+      return Object.assign(v, over || {});
+    };
+    const markKnown = () => c.log.forEach(l => { if (l.t === "ram" && l.a < 128) known[l.a] = 1; });
+    steps.push({ row: -1, t: T2("Reset", "Reset"), sub: T2("Power-on / reset state", "Güç verme / reset durumu"), fx: [],
+      ops: [T2("PC = 0000h (reset vector)", "PC = 0000h (reset vektörü)"), T2("SP = 07h, A = 00h, P0–P3 = FFh", "SP = 07h, A = 00h, P0–P3 = FFh")],
+      n: T2("Execution always starts at 0000h. Internal RAM contents are undefined after power-on (??).", "Program her zaman 0000h'den başlar. Güç verildiğinde dahili RAM içeriği belirsizdir (??)."), v: snap() });
+    let halted = false;
+    while (steps.length < limit) {
+      const ins = at[c.pc];
+      if (!ins) {
+        steps.push({ row: -1, t: T2("Stopped", "Durdu"), sub: T2("No instruction at PC", "PC'de komut yok"), fx: [], ops: [T2("PC = " + h4(c.pc) + "h", "PC = " + h4(c.pc) + "h")],
+          n: T2("PC points to an address that holds no instruction of this program. On real hardware the CPU would execute whatever bytes are there. A common cause is a corrupted return address on the stack.",
+                "PC, bu programa ait komut bulunmayan bir adresi gösteriyor. Gerçek donanımda işlemci orada ne varsa onu çalıştırırdı. Sık görülen sebep, stack'teki dönüş adresinin bozulmasıdır."), v: snap(), stop: true });
+        halted = true; break;
+      }
+      const pc0 = c.pc, next = (pc0 + ins.len) & 0xFFFF, mn = ins.form.mn, t = T2(ins.asm, ins.asm);
+      const lenTxt = T2(ins.len + (ins.len > 1 ? " bytes" : " byte"), ins.len + " byte");
+      if (mn === "ACALL" || mn === "LCALL") {
+        const tgt = ins.o.addr, s0 = c.sfr[0x81], s1 = (s0 + 1) & 255, s2 = (s0 + 2) & 255;
+        c.pc = next;
+        steps.push({ row: ins.row, t, sub: T2("Micro-step 1/4 · Compute the return address", "Mikro adım 1/4 · Dönüş adresinin hesaplanması"), fx: [{ k: "fetch" }, { k: "pcSet", l: "PC + " + ins.len }],
+          ops: [T2("PC ← " + h4(pc0) + "h + " + ins.len + " = " + h4(next) + "h", "PC ← " + h4(pc0) + "h + " + ins.len + " = " + h4(next) + "h")],
+          n: T2("PC now holds the address of the next instruction: this is the return address.", "PC artık sıradaki komutun adresini tutuyor: bu dönüş adresidir."), v: snap() });
+        c.sfr[0x81] = s1; c.ram[s1] = next & 255; known[s1] = 1;
+        steps.push({ row: ins.row, t, sub: T2("Micro-step 2/4 · Push PCL", "Mikro adım 2/4 · PCL stack'e yazılıyor"), fx: [{ k: "toRam", from: "pc", row: h2(s1), l: "PCL " + h2(next) + "h" }],
+          ops: [T2("SP ← " + h2(s0) + "h + 1 = " + h2(s1) + "h", "SP ← " + h2(s0) + "h + 1 = " + h2(s1) + "h"), T2("RAM[" + h2(s1) + "h] ← PCL = " + h2(next) + "h", "RAM[" + h2(s1) + "h] ← PCL = " + h2(next) + "h")],
+          n: T2("The low byte of the return address goes to the stack first.", "Dönüş adresinin önce düşük byte'ı stack'e yazılır."), v: snap() });
+        c.sfr[0x81] = s2; c.ram[s2] = next >> 8; known[s2] = 1;
+        steps.push({ row: ins.row, t, sub: T2("Micro-step 3/4 · Push PCH", "Mikro adım 3/4 · PCH stack'e yazılıyor"), fx: [{ k: "toRam", from: "pc", row: h2(s2), l: "PCH " + h2(next >> 8) + "h" }],
+          ops: [T2("SP ← " + h2(s1) + "h + 1 = " + h2(s2) + "h", "SP ← " + h2(s1) + "h + 1 = " + h2(s2) + "h"), T2("RAM[" + h2(s2) + "h] ← PCH = " + h2(next >> 8) + "h", "RAM[" + h2(s2) + "h] ← PCH = " + h2(next >> 8) + "h")],
+          n: T2("The return address " + h4(next) + "h is now on the stack. SP points to its high byte.", "Dönüş adresi " + h4(next) + "h artık stack'te. SP yüksek byte'ını gösteriyor."), v: snap() });
+        c.pc = tgt;
+        steps.push({ row: ins.row, t, sub: T2("Micro-step 4/4 · Jump to the subroutine", "Mikro adım 4/4 · Alt programa atlama"), fx: [{ k: "pcSet", l: "PC ← " + h4(tgt) + "h" }],
+          ops: [T2("PC ← " + h4(tgt) + "h", "PC ← " + h4(tgt) + "h")], n: DESC[mn], v: snap() });
+        continue;
+      }
+      if (mn === "RET" || mn === "RETI") {
+        const s0 = c.sfr[0x81], s1 = (s0 - 1) & 255, s2 = (s0 - 2) & 255, hi = c.ram[s0], lo = c.ram[s1];
+        c.sfr[0x81] = s1; c.pc = (hi << 8) | (c.pc & 255);
+        steps.push({ row: ins.row, t, sub: T2("Micro-step 1/2 · Pop PCH", "Mikro adım 1/2 · PCH stack'ten okunuyor"), fx: [{ k: "fetch" }, { k: "fromRam", to: "pc", row: h2(s0), l: "PCH " + h2(hi) + "h" }],
+          ops: [T2("PCH ← RAM[" + h2(s0) + "h] = " + h2(hi) + "h", "PCH ← RAM[" + h2(s0) + "h] = " + h2(hi) + "h"), T2("SP ← " + h2(s0) + "h − 1 = " + h2(s1) + "h", "SP ← " + h2(s0) + "h − 1 = " + h2(s1) + "h")],
+          n: T2("The last byte pushed (PCH) is read first.", "En son yazılan byte (PCH) ilk okunur."), v: snap({ pcl: "--" }) });
+        c.sfr[0x81] = s2; c.pc = (hi << 8) | lo;
+        steps.push({ row: ins.row, t, sub: T2("Micro-step 2/2 · Pop PCL", "Mikro adım 2/2 · PCL stack'ten okunuyor"), fx: [{ k: "fromRam", to: "pc", row: h2(s1), l: "PCL " + h2(lo) + "h" }],
+          ops: [T2("PCL ← RAM[" + h2(s1) + "h] = " + h2(lo) + "h", "PCL ← RAM[" + h2(s1) + "h] = " + h2(lo) + "h"), T2("SP ← " + h2(s1) + "h − 1 = " + h2(s2) + "h", "SP ← " + h2(s1) + "h − 1 = " + h2(s2) + "h"), T2("PC = " + h4(c.pc) + "h", "PC = " + h4(c.pc) + "h")],
+          n: T2("Return complete. The RAM cells keep their values; only SP moved down.", "Dönüş tamamlandı. RAM hücreleri silinmez, sadece SP aşağı iner."), v: snap() });
+        continue;
+      }
+      // Sıradan komut
+      c.log = []; c.reads = []; c.cond = undefined; c.pswChanged = false;
+      const pswBefore = c.sfr[0xD0];
+      c.pc = next;
+      ins.form.ex(c, ins.o);
+      markKnown();
+      const jumped = c.pc !== next;
+      const ops = [T2("PC ← " + h4(pc0) + "h + " + ins.len + " = " + h4(next) + "h", "PC ← " + h4(pc0) + "h + " + ins.len + " = " + h4(next) + "h")];
+      const fx = [{ k: "fetch" }, { k: "pcSet", l: jumped ? "PC ← " + h4(c.pc) + "h" : "PC + " + ins.len }];
+      const srcA = /,A$|,A,/.test(ins.form.spec) || (mn === "PUSH" && ins.o.dir === 0xE0);
+      c.log.forEach(l => {
+        if (l.t === "ram") {
+          const bank = l.a < 32 && (l.a & 0xF8) === bankBase(c) ? " (R" + (l.a & 7) + ")" : "";
+          ops.push(T2("RAM[" + h2(l.a) + "h]" + bank + " ← " + h2(l.v) + "h", "RAM[" + h2(l.a) + "h]" + bank + " ← " + h2(l.v) + "h"));
+          if (l.a < 128) fx.push({ k: "toRam", from: srcA ? "a" : "ir", row: h2(l.a), l: h2(l.v) + "h" });
+        } else {
+          const nm = SFR_NAME[l.a] || h2(l.a) + "h";
+          if (l.a === 0xE0) {
+            ops.push(T2("A ← " + h2(l.v) + "h", "A ← " + h2(l.v) + "h"));
+            const ra = c.reads.find(x => x < 128);
+            fx.push(ra !== undefined ? { k: "fromRam", to: "a", row: h2(ra), l: h2(l.v) + "h" } : { k: "bus", from: "ir", to: "a", l: h2(l.v) + "h" });
+          } else {
+            ops.push(T2(nm + " ← " + h2(l.v) + "h", nm + " ← " + h2(l.v) + "h"));
+            if (PORTS[l.a]) { c.port = l.a; fx.push({ k: "bus", from: srcA ? "a" : "ir", to: "p1", l: h2(l.v) + "h" }); }
+          }
+        }
+      });
+      if (c.sfr[0xD0] !== pswBefore && (c.sfr[0xD0] & 0xFE) !== (pswBefore & 0xFE)) ops.push(T2("PSW ← " + h2(c.sfr[0xD0]) + "h (CY = " + CY(c) + ")", "PSW ← " + h2(c.sfr[0xD0]) + "h (CY = " + CY(c) + ")"));
+      if (c.cond !== undefined) ops.push(c.cond ? T2("Condition true → jump to " + h4(c.pc) + "h", "Koşul doğru → " + h4(c.pc) + "h adresine atla") : T2("Condition false → continue at " + h4(next) + "h", "Koşul yanlış → " + h4(next) + "h ile devam"));
+      else if (jumped) ops.push(T2("PC ← " + h4(c.pc) + "h (jump)", "PC ← " + h4(c.pc) + "h (atlama)"));
+      const self = jumped && c.pc === pc0 && c.cond === undefined;
+      steps.push({ row: ins.row, t, sub: lenTxt, fx, ops,
+        n: self ? T2("The instruction jumps to itself, so the program stays here forever (end of program).", "Komut kendisine atlıyor, program burada sonsuza kadar bekler (programın sonu).") : (DESC[mn] || T2("", "")), v: snap() });
+      if (self) { halted = true; break; }
+    }
+    if (!halted) {
+      const last = steps[steps.length - 1];
+      last.n = T2("Step limit (" + limit + ") reached. The program may be in an endless loop.", "Adım sınırına (" + limit + ") ulaşıldı. Program sonsuz bir döngüde olabilir.");
+      last.stop = true;
+    }
+    return steps;
+  }
+
+  // ---------- Opcode açılımı ----------
+  const ROLE_MEAN = {
+    "#imm": (v) => T2("Immediate data = " + h2(v) + "h", "Anlık veri = " + h2(v) + "h"),
+    dir: (v) => T2("Direct address = " + h2(v) + "h" + (SFR_NAME[v] ? " (" + SFR_NAME[v] + ")" : ""), "Doğrudan adres = " + h2(v) + "h" + (SFR_NAME[v] ? " (" + SFR_NAME[v] + ")" : "")),
+    bit: (v) => T2("Bit address = " + h2(v) + "h", "Bit adresi = " + h2(v) + "h"),
+    rel: (v) => T2("Relative offset = " + h2(v) + "h (" + ((v << 24) >> 24) + ")", "Bağıl ofset = " + h2(v) + "h (" + ((v << 24) >> 24) + ")")
+  };
+  function opcodeInfo(it) {
+    const f = it.form, b = it.bytes, out = [];
+    out.push(T2("Opcode: " + f.spec.replace("#imm16", "#data16").replace("#imm", "#data").replace("dir", "direct"), "Opcode: " + f.spec.replace("#imm16", "#data16").replace("#imm", "#data").replace("dir", "direct")));
+    let k = 1;
+    f.ops.forEach(role => {
+      if (role === "#imm") out.push(ROLE_MEAN["#imm"](b[k++]));
+      else if (role === "#imm16" || role === "a16") { const w = role === "a16" ? T2("Target address", "Hedef adresin") : T2("16-bit data", "16 bit verinin"); out.push(T2(w.en + " high byte = " + h2(b[k]) + "h", w.tr + " yüksek byte'ı = " + h2(b[k]) + "h")); out.push(T2(w.en + " low byte = " + h2(b[k + 1]) + "h → " + h2(b[k]) + h2(b[k + 1]) + "h", w.tr + " düşük byte'ı = " + h2(b[k + 1]) + "h → " + h2(b[k]) + h2(b[k + 1]) + "h")); k += 2; }
+      else if (role === "dir" || role === "bit" || role === "rel") out.push(ROLE_MEAN[role](b[k++]));
+      else if (role === "a11") { out[0] = T2("Bits 7–5 = a10 a9 a8 · bits 4–0 = " + f.mn + " opcode", "Bit 7–5 = a10 a9 a8 · bit 4–0 = " + f.mn + " opcode"); out.push(T2("a7…a0 = " + h2(b[k]) + "h → target " + h4(it.o.addr) + "h", "a7…a0 = " + h2(b[k]) + "h → hedef " + h4(it.o.addr) + "h")); k++; }
+    });
+    if (f.spec === "MOV dir,dir") { out[1] = T2("Source " + out[1].en, "Kaynak · " + out[1].tr); out[2] = T2("Destination " + out[2].en, "Hedef · " + out[2].tr); }
+    let formula = T2(it.len + (it.len > 1 ? " bytes" : " byte") + " · " + it.asm, it.len + " byte · " + it.asm);
+    if (it.o && it.o.rel !== undefined) formula = T2(formula.en + " · Target = " + h4(it.addr + it.len) + "h + (" + it.o.off + ") = " + h4(it.o.rel) + "h", formula.tr + " · Hedef = " + h4(it.addr + it.len) + "h + (" + it.o.off + ") = " + h4(it.o.rel) + "h");
+    if (f.ops.includes("a11")) formula = T2(formula.en + " · Target = upper 5 bits of PC + 11 bits = " + h4(it.o.addr) + "h", formula.tr + " · Hedef = PC'nin üst 5 biti + 11 bit = " + h4(it.o.addr) + "h");
+    if (f.ops.includes("a16")) formula = T2(formula.en + " · Target = " + h4(it.o.addr) + "h", formula.tr + " · Hedef = " + h4(it.o.addr) + "h");
+    return { bytes: b.map((x, i) => ({ addr: h4(it.addr + i) + "h", hex: h2(x), mean: out[i] || T2("", "") })), formula };
+  }
+
+  return { assemble, run, opcodeInfo, MNEMONICS, h2, h4, DESC, SPECS: F.map(f => f.spec) };
+})();
+
+const LAB_EXAMPLES = [
+  { name: { en: "Subroutine calls (course example)", tr: "Alt program çağrıları (ders örneği)" }, code:
+`; Nested subroutine calls with ACALL and LCALL
+        ORG   0000h
+        LJMP  Main              ; skip the interrupt vector area
+
+        ORG   0030h
+Main:   MOV   A,#05h
+        ACALL AddSub            ; 2-byte call inside the same 2 KB block
+        NOP
+        MOV   R0,#10h
+        LCALL FarSub            ; 3-byte call, reaches any address
+        SJMP  $                 ; end of program
+
+        ORG   0040h
+AddSub: ADD   A,#03h
+        NOP
+        LCALL FarSub            ; nested call
+        RET
+
+        ORG   0900h             ; outside the first 2 KB block
+FarSub: MOV   P1,A
+        NOP
+        RET
+        END
+` },
+  { name: { en: "Stack corruption (notebook example)", tr: "Stack bozulması (defterdeki örnek)" }, code:
+`; LED routine plus a RAM-clear routine.
+; Watch the stack: ClearRam wipes 01h-7Fh, including the return addresses!
+        ORG   0000h
+        LJMP  Start
+
+        ORG   0030h
+Start:  MOV   A,#04h
+        ACALL LedOn
+        MOV   A,#0FFh
+        ACALL LedOn
+        SJMP  $
+
+LedOn:  NOP
+        MOV   P0,A
+        ACALL ClearRam
+        NOP
+        RET
+
+ClearRam:
+        MOV   R0,#7Fh
+Clear:  MOV   @R0,#00h
+        DJNZ  R0,Clear
+        RET                     ; pops 00h:00h -> jumps to 0000h!
+        END
+` },
+  { name: { en: "Loop with DJNZ and port output", tr: "DJNZ döngüsü ve port çıkışı" }, code:
+`; Count R7 down from 5 and show it on P1 (LEDs active-low)
+        ORG   0000h
+        MOV   R7,#05h
+Loop:   MOV   A,R7
+        CPL   A
+        MOV   P1,A
+        DJNZ  R7,Loop
+        SJMP  $
+        END
+` },
+  { name: { en: "PUSH / POP and a safe stack", tr: "PUSH / POP ve güvenli stack" }, code:
+`; Move the stack above the register banks, then swap A and B via the stack
+        ORG   0000h
+        MOV   SP,#2Fh
+        MOV   A,#11h
+        MOV   B,#22h
+        LCALL SwapAB
+        SJMP  $
+
+SwapAB: PUSH  ACC
+        PUSH  B
+        POP   ACC
+        POP   B
+        RET
+        END
+` }
+];
+const LAB_KEY = "eem305.labCode";
+let labModel = null;
+const getLabCode = () => ls.get(LAB_KEY, LAB_EXAMPLES[0].code);
+
+// Derlenmiş programdan simülasyon modeli üretir
+function buildLabModel(code) {
+  const res = A51.assemble(code);
+  if (res.errors.length) return null;
+  const h4 = A51.h4;
+  const FLASH = [], ROW = {};
+  let prevEnd = null;
+  res.items.forEach(i => {
+    if (i.onlyLabel) return;
+    if (prevEnd !== null && i.addr > prevEnd) {
+      const vec = prevEnd <= 0x0003 && i.addr >= 0x0030;
+      FLASH.push({ gap: vec ? { en: h4(prevEnd) + "h–" + h4(i.addr - 1) + "h: interrupt vectors / unused", tr: h4(prevEnd) + "h–" + h4(i.addr - 1) + "h: kesme vektörleri / boş" }
+                            : { en: h4(prevEnd) + "h–" + h4(i.addr - 1) + "h: unused", tr: h4(prevEnd) + "h–" + h4(i.addr - 1) + "h: boş" } });
+    }
+    // Sadece etiket içeren satırların etiketini sonraki komuta taşı
+    const lab = res.items.filter(x => x.onlyLabel && x.addr === i.addr).map(x => x.label).concat(i.label ? [i.label] : []).join(" ");
+    i.row = FLASH.length;
+    ROW[h4(i.addr)] = i.row;
+    FLASH.push({ a: h4(i.addr), b: i.bytes.map(A51.h2), lab: lab ? lab + ":" : "", asm: i.asm, item: i });
+    prevEnd = i.addr + i.len;
+  });
+  const STEPS = A51.run(res, 1500);
+  return {
+    id: "code-lab", title: { en: UI.en.labTitleSim, tr: UI.tr.labTitleSim }, FLASH, ROW, STEPS, ramMode: "grid", scrollFlash: true,
+    opcodeInfo: row => A51.opcodeInfo(FLASH[row].item),
+    cards: (p, v) => {
+      const pk = v.pcl !== "--", po = p.pcl === "--" ? p.pch + "--" : p.pch + p.pcl;
+      return [[t("pc16"), po + "h", (pk ? v.pch + v.pcl : v.pch + "--") + "h"], [t("sp8"), p.sp + "h", v.sp + "h"], [t("acc"), p.a + "h", v.a + "h"],
+              [t("bReg"), p.b + "h", v.b + "h"], [t("dptr"), p.dptr + "h", v.dptr + "h"], [t("psw"), p.psw + "h·" + p.cy, v.psw + "h·" + v.cy]];
+    },
+    flowRam: (v, s) => {
+      const sp = parseInt(v.sp, 16);
+      const top = Math.min(0x7F, Math.max(sp + 2, 4));
+      const win = [0, 1, 2, 3, 4].map(i => h2x(top - i));
+      const want = (s.fx || []).filter(f => f.row).map(f => f.row).find(r => !win.includes(r));
+      return win.concat([want || (win.includes("00") ? h2x(Math.min(0x7F, top + 1)) : "00")]);
+    },
+    portBox: v => [v.port, v.pv + "h"],
+    extra: { label: t("editCode"), onClick: () => location.hash = "#/lab" }
+  };
+}
+
+// ---------- 8051 assembly dili (CodeMirror sözdizimi renklendirme) ----------
+let asm51Lang = null;
+function getAsmLanguage() {
+  if (asm51Lang) return asm51Lang;
+  const MN = new Set(A51.MNEMONICS.concat(["CALL"]));
+  const DIR = new Set(["ORG", "EQU", "DB", "END"]);
+  const REG = new Set(["A", "B", "C", "AB", "DPTR", "ACC", "PSW", "SP", "DPL", "DPH", "P0", "P1", "P2", "P3", "IE", "IP", "TMOD", "TCON", "TH0", "TL0", "TH1", "TL1", "SCON", "SBUF", "PCON",
+    "R0", "R1", "R2", "R3", "R4", "R5", "R6", "R7", "CY", "OV", "AC", "RS0", "RS1", "EA", "TR0", "TR1", "TF0", "TF1"]);
+  asm51Lang = CM.StreamLanguage.define({
+    name: "asm8051",
+    token(stream) {
+      if (stream.eatSpace()) return null;
+      if (stream.peek() === ";") { stream.skipToEnd(); return "comment"; }
+      if (stream.match(/^'[^']*'/) || stream.match(/^"[^"]*"/)) return "string";
+      if (stream.match(/^(0x[0-9a-f]+|[0-9][0-9a-f]*h|[01]+b|\d+)\b/i)) return "number";
+      if (stream.match(/^[#@$+\-,]/)) return "operator";
+      const sol = stream.sol();
+      const w = stream.match(/^[A-Za-z_?][\w?]*(\.[0-7])?/);
+      if (w) {
+        const u = w[0].toUpperCase(), base = u.split(".")[0];
+        if (sol && stream.peek() === ":") { stream.next(); return "labelName"; }
+        if (MN.has(u)) return "keyword";
+        if (DIR.has(u)) return "meta";
+        if (REG.has(base)) return "atom";
+        return "variableName";
+      }
+      stream.next();
+      return null;
+    },
+    languageData: { commentTokens: { line: ";" } }
+  });
+  return asm51Lang;
+}
+function asmHighlight() {
+  const tg = CM.tags;
+  return CM.syntaxHighlighting(CM.HighlightStyle.define([
+    { tag: tg.keyword, color: "var(--accent)", fontWeight: "600" },
+    { tag: tg.meta, color: "#b45309", fontWeight: "600" },
+    { tag: tg.atom, color: "var(--ok)" },
+    { tag: tg.number, color: "var(--chg)" },
+    { tag: tg.string, color: "var(--chg)" },
+    { tag: tg.comment, color: "var(--muted)", fontStyle: "italic" },
+    { tag: tg.labelName, color: "var(--pc)", fontWeight: "600" },
+    { tag: tg.operator, color: "var(--muted)" },
+    { tag: tg.variableName, color: "var(--text)" }
+  ]));
+}
+// Otomatik tamamlama: komutlar, direktifler, register'lar ve koddaki etiketler
+function asmCompletions(ctx) {
+  const w = ctx.matchBefore(/[A-Za-z_?][\w?]*/);
+  if (!w || (w.from === w.to && !ctx.explicit)) return null;
+  const labels = [...ctx.state.doc.toString().matchAll(/^\s*([A-Za-z_?][\w?]*)\s*:/gm)].map(m => m[1]);
+  const opts = A51.MNEMONICS.map(m => ({ label: m, type: "keyword" }))
+    .concat(["ORG", "EQU", "DB", "END"].map(d => ({ label: d, type: "constant", detail: "directive" })))
+    .concat(["A", "B", "C", "DPTR", "ACC", "PSW", "SP", "P0", "P1", "P2", "P3", "R0", "R1", "R2", "R3", "R4", "R5", "R6", "R7"].map(r => ({ label: r, type: "variable" })))
+    .concat([...new Set(labels)].map(l => ({ label: l, type: "function", detail: "label" })));
+  return { from: w.from, options: opts, validFor: /^[\w?]*$/ };
+}
+
+function renderLab() {
+  app.innerHTML =
+    '<div class="labPage"><div class="labHead"><h2>' + ic("code-xml") + t("labTitle") + "</h2>" +
+      '<button class="btn primary" id="lRun">' + ic("play") + t("labRun") + '</button><button class="btn" id="lOpen">' + ic("folder-open") + t("labOpen") + '</button><button class="btn" id="lSave">' + ic("download") + t("labSave") + "</button>" +
+      '<select id="lEx"><option value="">' + t("labExamples") + "</option>" + LAB_EXAMPLES.map((e, i) => '<option value="' + i + '">' + L(e.name) + "</option>").join("") + "</select>" +
+      '<span class="hintKey">Ctrl+Enter</span><input type="file" id="lFile" accept=".asm,.a51,.s,.txt" style="display:none"></div>' +
+    '<div class="labBody"><div class="editor" id="lEditor"></div>' +
+      '<div class="side"><div class="card"><h3>' + ic("cpu") + t("labErrors") + '</h3><div id="lMsg"></div></div>' +
+      '<div class="card"><h3>' + ic("info") + t("labRef") + '</h3><div class="ref">' + t("labRefBody") + "</div></div>" +
+      '<div class="card"><h3>' + ic("book-open") + t("labSupported") + '</h3><div class="mnList">' + A51.MNEMONICS.map(m => "<span>" + m + "</span>").join("") + "</div></div></div></div></div>";
+
+  const showMsg = res => {
+    if (!$("lMsg")) return;
+    $("lMsg").innerHTML = res && res.errors.length
+      ? res.errors.map(e => '<div class="errItem" data-l="' + e.line + '">' + t("labLine") + " " + e.line + ": " + L(e.msg) + "</div>").join("")
+      : '<span class="okMsg">' + t("labOk") + "</span>";
+    $("lMsg").querySelectorAll(".errItem").forEach(el => el.onclick = () => goLine(+el.dataset.l));
+  };
+  // Assembler hatalarını editörde satır işaretleri olarak gösterir
+  const asmLinter = CM.linter(view => {
+    const res = A51.assemble(view.state.doc.toString());
+    showMsg(res);
+    return res.errors.map(e => { const ln = view.state.doc.line(Math.min(e.line, view.state.doc.lines)); return { from: ln.from, to: Math.max(ln.from, ln.to), severity: "error", message: L(e.msg) }; });
+  }, { delay: 350 });
+  const runIt = () => {
+    const code = view.state.doc.toString();
+    const res = A51.assemble(code);
+    showMsg(res);
+    if (res.errors.length) { goLine(res.errors[0].line); return true; }
+    labModel = buildLabModel(code);
+    ls.set("eem305.step.code-lab", 0);
+    location.hash = "#/lab/run";
+    return true;
+  };
+  const theme = CM.EditorView.theme({
+    "&": { height: "100%", fontSize: "13.5px", backgroundColor: "var(--card)", color: "var(--text)" },
+    ".cm-scroller": { fontFamily: "var(--monoFont)", lineHeight: "1.6" },
+    ".cm-content": { caretColor: "var(--accent)" },
+    ".cm-gutters": { backgroundColor: "var(--soft)", color: "var(--dim)", borderRight: "1px solid var(--border)" },
+    ".cm-activeLine": { backgroundColor: "color-mix(in srgb, var(--accent) 7%, transparent)" },
+    ".cm-activeLineGutter": { backgroundColor: "color-mix(in srgb, var(--accent) 12%, transparent)", color: "var(--text)" },
+    ".cm-selectionBackground, &.cm-focused .cm-selectionBackground, ::selection": { backgroundColor: "color-mix(in srgb, var(--accent) 25%, transparent) !important" },
+    "&.cm-focused": { outline: "none" },
+    ".cm-tooltip": { backgroundColor: "var(--card)", border: "1px solid var(--border)", borderRadius: "8px", color: "var(--text)" },
+    ".cm-tooltip-autocomplete > ul > li[aria-selected]": { backgroundColor: "var(--accent)", color: "var(--onAccent)" },
+    ".cm-cursor": { borderLeftColor: "var(--accent)" },
+    ".cm-matchingBracket": { backgroundColor: "transparent" }
+  }, { dark: effectiveTheme() === "dark" });
+  const view = new CM.EditorView({
+    parent: $("lEditor"),
+    state: CM.EditorState.create({
+      doc: getLabCode(),
+      extensions: [
+        CM.keymap.of([{ key: "Mod-Enter", run: runIt }, CM.indentWithTab]),
+        CM.basicSetup, getAsmLanguage(), asmHighlight(), theme,
+        CM.lintGutter(), asmLinter,
+        CM.autocompletion({ override: [asmCompletions] }),
+        CM.EditorState.tabSize.of(8),
+        CM.EditorView.updateListener.of(u => { if (u.docChanged) { ls.set(LAB_KEY, u.state.doc.toString()); labModel = null; } })
+      ]
+    })
+  });
+  const setCode = code => view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: code } });
+  const goLine = n => { const ln = view.state.doc.line(Math.min(Math.max(1, n), view.state.doc.lines)); view.dispatch({ selection: { anchor: ln.from, head: ln.to }, scrollIntoView: true }); view.focus(); };
+
+  $("lRun").onclick = runIt;
+  $("lOpen").onclick = () => $("lFile").click();
+  $("lFile").onchange = async () => { const f = $("lFile").files[0]; if (!f) return; setCode(await f.text()); };
+  $("lSave").onclick = () => { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([view.state.doc.toString()], { type: "text/plain" })); a.download = "program.asm"; document.body.appendChild(a); a.click(); a.remove(); };
+  $("lEx").onchange = () => {
+    const i = $("lEx").value; if (i === "") return;
+    const cur = view.state.doc.toString();
+    if (cur.trim() && cur !== LAB_EXAMPLES[i].code && !confirm(t("discardConfirm"))) { $("lEx").value = ""; return; }
+    setCode(LAB_EXAMPLES[i].code); $("lEx").value = "";
+  };
+  showMsg(null);
+  view.focus();
+}
+
+// =====================================================================
+// KOMUT SETİ SAYFASI — 8051'in 111 komutunun tamamı
+// Satır: [sözdizimi, opcode, byte, makine çevrimi, bayraklar, işlem]
+// =====================================================================
+const ISA = [
+  { g: "transfer", title: { en: "Data Transfer", tr: "Veri Transferi" }, fam: [
+    ["MOV", [["MOV A,Rn", "E8–EF", 1, 1, "", "A ← Rn"], ["MOV A,direct", "E5", 2, 1, "", "A ← (direct)"], ["MOV A,@Ri", "E6–E7", 1, 1, "", "A ← ((Ri))"], ["MOV A,#data", "74", 2, 1, "", "A ← #data"],
+      ["MOV Rn,A", "F8–FF", 1, 1, "", "Rn ← A"], ["MOV Rn,direct", "A8–AF", 2, 2, "", "Rn ← (direct)"], ["MOV Rn,#data", "78–7F", 2, 1, "", "Rn ← #data"],
+      ["MOV direct,A", "F5", 2, 1, "", "(direct) ← A"], ["MOV direct,Rn", "88–8F", 2, 2, "", "(direct) ← Rn"], ["MOV direct,direct", "85", 3, 2, "", "(dest) ← (src)"],
+      ["MOV direct,@Ri", "86–87", 2, 2, "", "(direct) ← ((Ri))"], ["MOV direct,#data", "75", 3, 2, "", "(direct) ← #data"],
+      ["MOV @Ri,A", "F6–F7", 1, 1, "", "((Ri)) ← A"], ["MOV @Ri,direct", "A6–A7", 2, 2, "", "((Ri)) ← (direct)"], ["MOV @Ri,#data", "76–77", 2, 1, "", "((Ri)) ← #data"],
+      ["MOV DPTR,#data16", "90", 3, 2, "", "DPTR ← #data16"]]],
+    ["MOVC", [["MOVC A,@A+DPTR", "93", 1, 2, "", "A ← code(A + DPTR)"], ["MOVC A,@A+PC", "83", 1, 2, "", "A ← code(A + PC)"]]],
+    ["MOVX", [["MOVX A,@Ri", "E2–E3", 1, 2, "", "A ← ext((Ri))"], ["MOVX A,@DPTR", "E0", 1, 2, "", "A ← ext(DPTR)"], ["MOVX @Ri,A", "F2–F3", 1, 2, "", "ext((Ri)) ← A"], ["MOVX @DPTR,A", "F0", 1, 2, "", "ext(DPTR) ← A"]]],
+    ["PUSH", [["PUSH direct", "C0", 2, 2, "", "SP ← SP + 1; (SP) ← (direct)"]]],
+    ["POP", [["POP direct", "D0", 2, 2, "", "(direct) ← (SP); SP ← SP − 1"]]],
+    ["XCH", [["XCH A,Rn", "C8–CF", 1, 1, "", "A ↔ Rn"], ["XCH A,direct", "C5", 2, 1, "", "A ↔ (direct)"], ["XCH A,@Ri", "C6–C7", 1, 1, "", "A ↔ ((Ri))"]]],
+    ["XCHD", [["XCHD A,@Ri", "D6–D7", 1, 1, "", "A₃₋₀ ↔ ((Ri))₃₋₀"]]]
+  ] },
+  { g: "arith", title: { en: "Arithmetic", tr: "Aritmetik" }, fam: [
+    ["ADD", [["ADD A,Rn", "28–2F", 1, 1, "CY OV AC", "A ← A + Rn"], ["ADD A,direct", "25", 2, 1, "CY OV AC", "A ← A + (direct)"], ["ADD A,@Ri", "26–27", 1, 1, "CY OV AC", "A ← A + ((Ri))"], ["ADD A,#data", "24", 2, 1, "CY OV AC", "A ← A + #data"]]],
+    ["ADDC", [["ADDC A,Rn", "38–3F", 1, 1, "CY OV AC", "A ← A + Rn + CY"], ["ADDC A,direct", "35", 2, 1, "CY OV AC", "A ← A + (direct) + CY"], ["ADDC A,@Ri", "36–37", 1, 1, "CY OV AC", "A ← A + ((Ri)) + CY"], ["ADDC A,#data", "34", 2, 1, "CY OV AC", "A ← A + #data + CY"]]],
+    ["SUBB", [["SUBB A,Rn", "98–9F", 1, 1, "CY OV AC", "A ← A − Rn − CY"], ["SUBB A,direct", "95", 2, 1, "CY OV AC", "A ← A − (direct) − CY"], ["SUBB A,@Ri", "96–97", 1, 1, "CY OV AC", "A ← A − ((Ri)) − CY"], ["SUBB A,#data", "94", 2, 1, "CY OV AC", "A ← A − #data − CY"]]],
+    ["INC", [["INC A", "04", 1, 1, "", "A ← A + 1"], ["INC Rn", "08–0F", 1, 1, "", "Rn ← Rn + 1"], ["INC direct", "05", 2, 1, "", "(direct) ← (direct) + 1"], ["INC @Ri", "06–07", 1, 1, "", "((Ri)) ← ((Ri)) + 1"], ["INC DPTR", "A3", 1, 2, "", "DPTR ← DPTR + 1"]]],
+    ["DEC", [["DEC A", "14", 1, 1, "", "A ← A − 1"], ["DEC Rn", "18–1F", 1, 1, "", "Rn ← Rn − 1"], ["DEC direct", "15", 2, 1, "", "(direct) ← (direct) − 1"], ["DEC @Ri", "16–17", 1, 1, "", "((Ri)) ← ((Ri)) − 1"]]],
+    ["MUL", [["MUL AB", "A4", 1, 4, "CY=0 OV", "B:A ← A × B"]]],
+    ["DIV", [["DIV AB", "84", 1, 4, "CY=0 OV", "A ← A ÷ B; B ← A mod B"]]],
+    ["DA", [["DA A", "D4", 1, 1, "CY", "A ← BCD adjust(A)"]]]
+  ] },
+  { g: "logic", title: { en: "Logical", tr: "Mantıksal" }, fam: [
+    ["ANL", [["ANL A,Rn", "58–5F", 1, 1, "", "A ← A ∧ Rn"], ["ANL A,direct", "55", 2, 1, "", "A ← A ∧ (direct)"], ["ANL A,@Ri", "56–57", 1, 1, "", "A ← A ∧ ((Ri))"], ["ANL A,#data", "54", 2, 1, "", "A ← A ∧ #data"], ["ANL direct,A", "52", 2, 1, "", "(direct) ← (direct) ∧ A"], ["ANL direct,#data", "53", 3, 2, "", "(direct) ← (direct) ∧ #data"]]],
+    ["ORL", [["ORL A,Rn", "48–4F", 1, 1, "", "A ← A ∨ Rn"], ["ORL A,direct", "45", 2, 1, "", "A ← A ∨ (direct)"], ["ORL A,@Ri", "46–47", 1, 1, "", "A ← A ∨ ((Ri))"], ["ORL A,#data", "44", 2, 1, "", "A ← A ∨ #data"], ["ORL direct,A", "42", 2, 1, "", "(direct) ← (direct) ∨ A"], ["ORL direct,#data", "43", 3, 2, "", "(direct) ← (direct) ∨ #data"]]],
+    ["XRL", [["XRL A,Rn", "68–6F", 1, 1, "", "A ← A ⊕ Rn"], ["XRL A,direct", "65", 2, 1, "", "A ← A ⊕ (direct)"], ["XRL A,@Ri", "66–67", 1, 1, "", "A ← A ⊕ ((Ri))"], ["XRL A,#data", "64", 2, 1, "", "A ← A ⊕ #data"], ["XRL direct,A", "62", 2, 1, "", "(direct) ← (direct) ⊕ A"], ["XRL direct,#data", "63", 3, 2, "", "(direct) ← (direct) ⊕ #data"]]],
+    ["CLR", [["CLR A", "E4", 1, 1, "", "A ← 0"]]],
+    ["CPL", [["CPL A", "F4", 1, 1, "", "A ← ¬A"]]],
+    ["RL", [["RL A", "23", 1, 1, "", "A₇₋₁ ← A₆₋₀; A₀ ← A₇"]]],
+    ["RLC", [["RLC A", "33", 1, 1, "CY", "A₇₋₁ ← A₆₋₀; A₀ ← CY; CY ← A₇"]]],
+    ["RR", [["RR A", "03", 1, 1, "", "A₆₋₀ ← A₇₋₁; A₇ ← A₀"]]],
+    ["RRC", [["RRC A", "13", 1, 1, "CY", "A₆₋₀ ← A₇₋₁; A₇ ← CY; CY ← A₀"]]],
+    ["SWAP", [["SWAP A", "C4", 1, 1, "", "A₃₋₀ ↔ A₇₋₄"]]]
+  ] },
+  { g: "bool", title: { en: "Boolean (Bit)", tr: "Boolean (Bit)" }, fam: [
+    ["CLR", [["CLR C", "C3", 1, 1, "CY=0", "CY ← 0"], ["CLR bit", "C2", 2, 1, "", "bit ← 0"]]],
+    ["SETB", [["SETB C", "D3", 1, 1, "CY=1", "CY ← 1"], ["SETB bit", "D2", 2, 1, "", "bit ← 1"]]],
+    ["CPL", [["CPL C", "B3", 1, 1, "CY", "CY ← ¬CY"], ["CPL bit", "B2", 2, 1, "", "bit ← ¬bit"]]],
+    ["ANL", [["ANL C,bit", "82", 2, 2, "CY", "CY ← CY ∧ bit"], ["ANL C,/bit", "B0", 2, 2, "CY", "CY ← CY ∧ ¬bit"]]],
+    ["ORL", [["ORL C,bit", "72", 2, 2, "CY", "CY ← CY ∨ bit"], ["ORL C,/bit", "A0", 2, 2, "CY", "CY ← CY ∨ ¬bit"]]],
+    ["MOV", [["MOV C,bit", "A2", 2, 1, "CY", "CY ← bit"], ["MOV bit,C", "92", 2, 2, "", "bit ← CY"]]],
+    ["JC", [["JC rel", "40", 2, 2, "", "if CY = 1: PC ← PC + rel"]]],
+    ["JNC", [["JNC rel", "50", 2, 2, "", "if CY = 0: PC ← PC + rel"]]],
+    ["JB", [["JB bit,rel", "20", 3, 2, "", "if bit = 1: PC ← PC + rel"]]],
+    ["JNB", [["JNB bit,rel", "30", 3, 2, "", "if bit = 0: PC ← PC + rel"]]],
+    ["JBC", [["JBC bit,rel", "10", 3, 2, "", "if bit = 1: bit ← 0; PC ← PC + rel"]]]
+  ] },
+  { g: "branch", title: { en: "Program Branching", tr: "Program Dallanma" }, fam: [
+    ["ACALL", [["ACALL addr11", "x1 (11, 31 … F1)", 2, 2, "", "push PC; PC₁₀₋₀ ← addr11"]]],
+    ["LCALL", [["LCALL addr16", "12", 3, 2, "", "push PC; PC ← addr16"]]],
+    ["RET", [["RET", "22", 1, 2, "", "PCH ← pop; PCL ← pop"]]],
+    ["RETI", [["RETI", "32", 1, 2, "", "PCH ← pop; PCL ← pop; enable lower-priority interrupts"]]],
+    ["AJMP", [["AJMP addr11", "x1 (01, 21 … E1)", 2, 2, "", "PC₁₀₋₀ ← addr11"]]],
+    ["LJMP", [["LJMP addr16", "02", 3, 2, "", "PC ← addr16"]]],
+    ["SJMP", [["SJMP rel", "80", 2, 2, "", "PC ← PC + rel"]]],
+    ["JMP", [["JMP @A+DPTR", "73", 1, 2, "", "PC ← A + DPTR"]]],
+    ["JZ", [["JZ rel", "60", 2, 2, "", "if A = 0: PC ← PC + rel"]]],
+    ["JNZ", [["JNZ rel", "70", 2, 2, "", "if A ≠ 0: PC ← PC + rel"]]],
+    ["CJNE", [["CJNE A,direct,rel", "B5", 3, 2, "CY", "if A ≠ (direct): jump; CY ← A < (direct)"], ["CJNE A,#data,rel", "B4", 3, 2, "CY", "if A ≠ #data: jump; CY ← A < #data"],
+      ["CJNE Rn,#data,rel", "B8–BF", 3, 2, "CY", "if Rn ≠ #data: jump; CY ← Rn < #data"], ["CJNE @Ri,#data,rel", "B6–B7", 3, 2, "CY", "if ((Ri)) ≠ #data: jump; CY ← ((Ri)) < #data"]]],
+    ["DJNZ", [["DJNZ Rn,rel", "D8–DF", 2, 2, "", "Rn ← Rn − 1; if Rn ≠ 0: jump"], ["DJNZ direct,rel", "D5", 3, 2, "", "(direct) ← (direct) − 1; if ≠ 0: jump"]]],
+    ["NOP", [["NOP", "00", 1, 1, "", "—"]]]
+  ] }
+];
+// Emülatörün açıklama sözlüğünde olmayan aileler
+const ISA_DESC_EXTRA = {
+  MOVX: { en: "Reads or writes external data memory (XRAM) through @Ri or DPTR.", tr: "Harici veri belleğini (XRAM) @Ri ya da DPTR üzerinden okur veya yazar." },
+  XCHD: { en: "Exchanges only the low nibble of A with the low nibble of the indirectly addressed RAM byte.", tr: "A'nın alt 4 bitini, dolaylı adreslenen RAM byte'ının alt 4 bitiyle değiştirir." },
+  DA: { en: "Decimal-adjusts A after a BCD addition so it holds two valid BCD digits.", tr: "BCD toplamadan sonra A'yı düzeltir; A iki geçerli BCD basamak tutar." },
+  JBC: { en: "Jumps if the bit is 1 and clears the bit in the same instruction.", tr: "Bit 1 ise atlar ve aynı komutta biti sıfırlar." },
+  ANL_bool: { en: "Logical AND of the carry flag with a bit (or its complement).", tr: "Elde bayrağı (CY) ile bir bitin (ya da tersinin) VE işlemi." },
+  ORL_bool: { en: "Logical OR of the carry flag with a bit (or its complement).", tr: "Elde bayrağı (CY) ile bir bitin (ya da tersinin) VEYA işlemi." },
+  MOV_bool: { en: "Copies a bit to the carry flag or the carry flag to a bit.", tr: "Bir biti CY'ye ya da CY'yi bir bite kopyalar." }
+};
+let isaFilter = { q: "", g: "all" };
+
+function renderInstructions() {
+  const simSpecs = new Set(A51.SPECS);
+  const toSpec = x => x.replace("#data16", "#imm16").replace(/#data/g, "#imm").replace(/direct/g, "dir").replace("addr11", "a11").replace("addr16", "a16");
+  const total = ISA.reduce((n, g) => n + g.fam.reduce((m, f) => m + f[1].length, 0), 0);
+  app.innerHTML =
+    '<div class="wrap isaWrap"><div class="card"><h1>' + ic("book-open") + t("isaTitle") + '</h1><p class="lead">' + t("isaLead").replace("{n}", total) + "</p>" +
+    '<div class="isaLegend">' + t("isaLegend") + "</div></div>" +
+    '<div class="isaBar"><div class="isaSearch">' + ic("search") + '<input id="isaQ" type="search" placeholder="' + t("isaSearch") + '" value="' + escHtml(isaFilter.q) + '"></div>' +
+    '<div class="seg" id="isaG">' + [["all", t("isaAll")]].concat(ISA.map(g => [g.g, L(g.title)])).map(([k, l]) => '<button data-g="' + k + '" class="' + (isaFilter.g === k ? "on" : "") + '">' + l + "</button>").join("") + "</div>" +
+    '<span class="isaCount" id="isaCount"></span></div><div id="isaBody"></div></div>';
+
+  const draw = () => {
+    const q = isaFilter.q.trim().toUpperCase();
+    let shown = 0, html = "";
+    ISA.forEach(grp => {
+      if (isaFilter.g !== "all" && isaFilter.g !== grp.g) return;
+      let rows = "";
+      grp.fam.forEach(([mn, list]) => {
+        const key = grp.g === "bool" && ["ANL", "ORL", "MOV"].includes(mn) ? mn + "_bool" : mn;
+        const desc = ISA_DESC_EXTRA[key] || A51.DESC[mn] || { en: "", tr: "" };
+        const hits = list.filter(r => !q || r[0].toUpperCase().includes(q) || r[5].toUpperCase().includes(q) || L(desc).toUpperCase().includes(q) || r[1].includes(q));
+        if (!hits.length) return;
+        shown += hits.length;
+        rows += '<tr class="famRow"><td colspan="7"><span class="famName mono">' + mn + "</span>" + escHtml(L(desc)) + "</td></tr>";
+        hits.forEach(r => {
+          const sim = simSpecs.has(toSpec(r[0]));
+          rows += '<tr><td class="mono isaSyn">' + r[0] + '</td><td class="mono isaOp">' + escHtml(r[5]) + '</td><td class="mono">' + r[1] + '</td><td class="num">' + r[2] + '</td><td class="num">' + r[3] + '</td><td class="mono isaFlags">' + (r[4] || "—") +
+            "</td><td>" + (sim ? '<span class="b stack">' + t("isaSim") + "</span>" : '<span class="b stale">' + t("isaRef") + "</span>") + "</td></tr>";
+        });
+      });
+      if (rows) html += '<div class="card isaGroup"><h2>' + L(grp.title) + '</h2><table class="isaTbl"><tr><th>' + t("isaColIns") + "</th><th>" + t("isaColOp") + "</th><th>Opcode</th><th>" + t("bytes") + "</th><th>" + t("isaColCyc") + "</th><th>" + t("isaColFlags") + "</th><th>" + t("isaColSim") + "</th></tr>" + rows + "</table></div>";
+    });
+    $("isaBody").innerHTML = html || '<div class="card" style="color:var(--muted)">' + t("isaNone") + "</div>";
+    $("isaCount").textContent = shown + " / " + total;
+  };
+  $("isaQ").oninput = e => { isaFilter.q = e.target.value; draw(); };
+  $("isaG").querySelectorAll("button").forEach(b => b.onclick = () => { isaFilter.g = b.dataset.g; $("isaG").querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b)); draw(); });
+  draw();
+  if (window.gsap && settings.animation) gsap.from(".isaGroup", { y: 14, opacity: 0, duration: 0.4, stagger: 0.05, ease: "power2.out", clearProps: "transform,opacity" });
+}
+
+route();
+</script>
+</body>
+</html>
