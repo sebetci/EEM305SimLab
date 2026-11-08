@@ -25,7 +25,7 @@ Uygulama **internete bağlanamaz**: dosyanın başındaki İçerik Güvenliği P
 | Doğrulama | |
 |---|---|
 | SHA-256 (`EEM305SimLab.html`) | `c0694fec27c4f6ac0f228ab42924799173675e510fcacba01d99c7c2c437d7f9` |
-| VirusTotal raporu | https://www.virustotal.com/gui/file/6dea03bd7237315af037c6793ce7355316138bbe02a00aaa5de6ad928d8481f5/detection |
+| VirusTotal raporu | [Report](https://www.virustotal.com/gui/file/6dea03bd7237315af037c6793ce7355316138bbe02a00aaa5de6ad928d8481f5/detection) |
 | Tüm özet değerleri | [SHA256SUMS.txt](SHA256SUMS.txt) |
 
 Windows'ta doğrulamak için PowerShell'de:
