@@ -25,7 +25,7 @@ The application **cannot access the network**: a Content Security Policy at the 
 | Check | |
 |---|---|
 | SHA-256 (`EEM305SimLab.html`) | `c0694fec27c4f6ac0f228ab42924799173675e510fcacba01d99c7c2c437d7f9` |
-| VirusTotal report | [View report](https://www.virustotal.com/gui/file/c0694fec27c4f6ac0f228ab42924799173675e510fcacba01d99c7c2c437d7f9?nocache=1) |
+| VirusTotal report | [View report](https://www.virustotal.com/gui/file/c0694fec27c4f6ac0f228ab42924799173675e510fcacba01d99c7c2c437d7f9/detection) |
 | All checksums | [SHA256SUMS.txt](SHA256SUMS.txt) |
 
 To verify the file on Windows (PowerShell):
