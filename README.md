@@ -6,7 +6,7 @@ MCS-51 (8051) mimarisi için etkileşimli bir öğrenme ortamıdır. Komutları 
 
 ## Hemen Kullan
 
-- **Tarayıcıda aç:** https://KULLANICI_ADI.github.io/EEM305SimLab/
+- **Tarayıcıda aç:** https://sebetci.github.io/EEM305SimLab/EEM305SimLab.html
 - **İndir:** `EEM305SimLab.html` dosyasını indirip çift tıklayın. İnternet bağlantısı gerekmez.
 
 ## Özellikler
